@@ -1,0 +1,21 @@
+using System.Text.Json.Serialization;
+using AudioCatalog.Models;
+
+namespace AudioCatalog.Database.Entity {
+  public class Artist {
+    public int Id { get; set; }
+    public required string Name { get; set; }
+    public string? Reddit { get; set; }
+    public string? Twitter { get; set; }
+    [JsonIgnore]
+    public List<Audio>? Audios { get; set; }
+
+    public static Artist From(ArtistPostRequest request) {
+      return new Artist {
+        Name = request.Name,
+        Reddit = request.Reddit,
+        Twitter = request.Twitter,
+      };
+    }
+  }
+}

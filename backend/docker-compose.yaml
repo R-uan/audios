@@ -1,0 +1,27 @@
+services:
+  audio_catalog_database:
+    image: postgres 
+    container_name: audio_catalog 
+    environment:
+      POSTGRES_DB: audio_catalog 
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - /mnt/hdd/docker_volumes/pgsql:/var/lib/postgresql
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    restart: unless-stopped
+
+volumes:
+  pgsql:
