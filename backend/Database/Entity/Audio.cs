@@ -1,32 +1,43 @@
-using System.Text.Json.Serialization;
 using AudioCatalog.Models;
 
 namespace AudioCatalog.Database.Entity {
   public class Audio {
-    public int Id { get; set; }
-    public required int ArtistId { get; set; }
+    public required Guid Id { get; set; } = Guid.NewGuid();
+    public required Guid ArtistId { get; set; }
     public required string Title { get; set; }
 
-    public required string Link { get; set; }
+    public string? Link { get; set; }
+    public required bool Local { get; set; }
+    // If the media is stored locally or not
     public required string Source { get; set; }
-    public required DateTime AddedAt { get; set; }
 
-    public int Duration { get; set; }
-
-    [JsonIgnore]
-    public List<Tag>? Tags { get; set; }
     public required Artist Artist { get; set; }
+    public required DateTime AddedAt { get; set; }
+    public AudioMetadata? Metadata { get; set; }
 
-    public static Audio From(PostAudioRequest request, Artist artist, DateTime now) {
-      return new Audio {
+    public static Audio FromRequest(PostAudioRequest request, Artist artist) {
+      var audioId = Guid.NewGuid();
+      var audio = new Audio {
+        Id = audioId,
         Artist = artist,
-        AddedAt = now,
-        Duration = request.Duration,
+        AddedAt = DateTime.UtcNow,
+        Local = false,
         Link = request.Link,
         Source = request.Source,
         Title = request.Title,
         ArtistId = artist.Id,
       };
+
+      audio.Metadata = new AudioMetadata {
+        Id = Guid.NewGuid(),
+        Duration = request.Duration,
+        AudioId = audioId,
+        Genrer = request.Genrer,
+        Mood = request.Mood,
+        ReleaseYear = request.ReleaseYear,
+        Audio = audio
+      };
+      return audio;
     }
   }
 }

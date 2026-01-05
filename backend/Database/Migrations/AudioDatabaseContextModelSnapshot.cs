@@ -24,11 +24,9 @@ namespace AudioCatalog.Database.Migrations
 
             modelBuilder.Entity("AudioCatalog.Database.Entity.Artist", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -50,24 +48,21 @@ namespace AudioCatalog.Database.Migrations
 
             modelBuilder.Entity("AudioCatalog.Database.Entity.Audio", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("AddedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("ArtistId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Duration")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("ArtistId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Link")
-                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("Local")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -84,13 +79,40 @@ namespace AudioCatalog.Database.Migrations
                     b.ToTable("audios", (string)null);
                 });
 
-            modelBuilder.Entity("AudioCatalog.Database.Entity.Tag", b =>
+            modelBuilder.Entity("AudioCatalog.Database.Entity.AudioMetadata", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AudioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("Duration")
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<string>("Genrer")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Mood")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ReleaseYear")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AudioId")
+                        .IsUnique();
+
+                    b.ToTable("audio_metadata", (string)null);
+                });
+
+            modelBuilder.Entity("AudioCatalog.Database.Entity.Tag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -101,19 +123,19 @@ namespace AudioCatalog.Database.Migrations
                     b.ToTable("tags", (string)null);
                 });
 
-            modelBuilder.Entity("AudioTag", b =>
+            modelBuilder.Entity("AudioMetadataTag", b =>
                 {
-                    b.Property<int>("AudiosId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("AudioMetadatasId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("TagsId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("TagsId")
+                        .HasColumnType("uuid");
 
-                    b.HasKey("AudiosId", "TagsId");
+                    b.HasKey("AudioMetadatasId", "TagsId");
 
                     b.HasIndex("TagsId");
 
-                    b.ToTable("AudioTag");
+                    b.ToTable("audio_metadata_tags", (string)null);
                 });
 
             modelBuilder.Entity("AudioCatalog.Database.Entity.Audio", b =>
@@ -127,11 +149,22 @@ namespace AudioCatalog.Database.Migrations
                     b.Navigation("Artist");
                 });
 
-            modelBuilder.Entity("AudioTag", b =>
+            modelBuilder.Entity("AudioCatalog.Database.Entity.AudioMetadata", b =>
                 {
-                    b.HasOne("AudioCatalog.Database.Entity.Audio", null)
+                    b.HasOne("AudioCatalog.Database.Entity.Audio", "Audio")
+                        .WithOne("Metadata")
+                        .HasForeignKey("AudioCatalog.Database.Entity.AudioMetadata", "AudioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Audio");
+                });
+
+            modelBuilder.Entity("AudioMetadataTag", b =>
+                {
+                    b.HasOne("AudioCatalog.Database.Entity.AudioMetadata", null)
                         .WithMany()
-                        .HasForeignKey("AudiosId")
+                        .HasForeignKey("AudioMetadatasId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -145,6 +178,11 @@ namespace AudioCatalog.Database.Migrations
             modelBuilder.Entity("AudioCatalog.Database.Entity.Artist", b =>
                 {
                     b.Navigation("Audios");
+                });
+
+            modelBuilder.Entity("AudioCatalog.Database.Entity.Audio", b =>
+                {
+                    b.Navigation("Metadata");
                 });
 #pragma warning restore 612, 618
         }

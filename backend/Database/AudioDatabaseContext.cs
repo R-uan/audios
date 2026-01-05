@@ -1,3 +1,4 @@
+using System.Reflection.Metadata.Ecma335;
 using AudioCatalog.Database.Entity;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,12 +7,13 @@ namespace AudioCatalog.Database {
     public DbSet<Artist> Artists { get; set; }
     public DbSet<Audio> Audios { get; set; }
     public DbSet<Tag> Tags { get; set; }
+    public DbSet<AudioMetadata> AudioMetadata { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
       modelBuilder.Entity<Artist>(artist => {
         artist.ToTable("artists");
-        artist.HasIndex(a => a.Name).IsUnique();
         artist.HasKey(a => a.Id);
+        artist.HasIndex(a => a.Name).IsUnique();
         artist.HasMany(a => a.Audios)
               .WithOne(a => a.Artist)
               .HasForeignKey(a => a.ArtistId)
@@ -21,7 +23,18 @@ namespace AudioCatalog.Database {
       modelBuilder.Entity<Audio>(audio => {
         audio.ToTable("audios");
         audio.HasKey(a => a.Id);
-        audio.HasMany(a => a.Tags).WithMany(a => a.Audios);
+        audio.HasOne(a => a.Metadata)
+             .WithOne(m => m.Audio)
+             .HasForeignKey<AudioMetadata>(m => m.AudioId)
+             .OnDelete(DeleteBehavior.Cascade);
+      });
+
+      modelBuilder.Entity<AudioMetadata>(metadata => {
+        metadata.ToTable("audio_metadata");
+        metadata.HasKey(m => m.Id);
+        metadata.HasMany(m => m.Tags)
+                .WithMany(t => t.AudioMetadatas)
+                .UsingEntity(j => j.ToTable("audio_metadata_tags")); // Optional: custom join table name
       });
 
       modelBuilder.Entity<Tag>(tag => {

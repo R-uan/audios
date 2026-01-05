@@ -1,9 +1,9 @@
 services:
   audio_catalog_database:
     image: postgres 
-    container_name: audio_catalog 
+    container_name: media_catalog
     environment:
-      POSTGRES_DB: audio_catalog 
+      POSTGRES_DB: media_catalog
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:

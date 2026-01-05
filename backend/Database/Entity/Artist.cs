@@ -3,7 +3,7 @@ using AudioCatalog.Models;
 
 namespace AudioCatalog.Database.Entity {
   public class Artist {
-    public int Id { get; set; }
+    public required Guid Id { get; set; } = Guid.NewGuid();
     public required string Name { get; set; }
     public string? Reddit { get; set; }
     public string? Twitter { get; set; }
@@ -12,6 +12,7 @@ namespace AudioCatalog.Database.Entity {
 
     public static Artist From(ArtistPostRequest request) {
       return new Artist {
+        Id = Guid.NewGuid(),
         Name = request.Name,
         Reddit = request.Reddit,
         Twitter = request.Twitter,
