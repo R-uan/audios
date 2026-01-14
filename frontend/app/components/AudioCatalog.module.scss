@@ -1,52 +1,92 @@
 .catalog {
+  flex: 1;
+  min-width: 400px;
+  padding: 3px;
+  height: 100%;
+  border-radius: var(--bradius);
   overflow: scroll;
   scrollbar-width: thin;
-  border: 1px solid red;
-  height: 100vh;
-  width: 500px;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &>header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+
+    & span {
+      font-size: 1.2rem;
+    }
+  }
 }
 
 .audiosWrapper {
   display: flex;
+  position: relative;
   flex-direction: column;
+  padding: 10px;
 
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 100%;
+    background-color: var(--secondary);
+  }
+
+  &::before {
+    left: 0;
+  }
+
+  &::after {
+    right: 0;
+  }
 
   .individualAudioWrapper {
-    margin: 5px;
-    padding: 5px;
+    gap: 10px;
+    margin: 2px;
     overflow: hidden;
+    padding: 7px 24px;
+    border-radius: var(--bradius);
     justify-content: space-between;
-    border: 1px solid blue;
+    // background-color: var(--secondary);
 
     display: flex;
     flex-direction: row;
 
     .audioTitleWrapper>span {
-      font-size: 1.1rem;
+      font-size: 0.875rem;
+    }
+
+    .audioArtistWrapper {
+      display: flex;
+      justify-content: space-between;
     }
 
     .audioArtistWrapper>span {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
 
     &>div:first-child {
-      width: 400px;
+      width: 80%;
       display: flex;
       flex-direction: column;
     }
 
     &>div:last-child {
-      width: 20px;
       display: flex;
+      width: fit-content;
       align-items: center;
       flex-direction: column;
       justify-content: center;
-
-      &>button {
-        width: 100%;
-        height: 100%;
-        outline: 1px solid green;
-      }
     }
+  }
+
+  .individualAudioWrapper:hover {
+    background-color: black;
   }
 }

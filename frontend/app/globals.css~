@@ -3,9 +3,9 @@
 :root {
   --background: #0c1519;
   --foreground: #f9e5de;
-  --primary: #23212c;
-  --secondary: #f1fec8;
-  --bradius: 2px;
+  --primary: transparent;
+  --secondary: #162127;
+  --bradius: 6px;
 }
 
 @theme inline {
