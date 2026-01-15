@@ -1,0 +1,63 @@
+.individualAudioWrapper {
+  gap: 10px;
+  margin: 2px;
+  overflow: hidden;
+  padding: 7px 24px;
+  border-radius: var(--bradius);
+  justify-content: space-between;
+  // background-color: var(--secondary);
+
+  display: flex;
+  flex-direction: row;
+
+  .audioTitleWrapper>span {
+    font-size: 0.875rem;
+  }
+
+  .audioArtistWrapper {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .audioArtistWrapper>span {
+    font-size: 0.8rem;
+  }
+
+  &>div:first-child {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &>div:last-child {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+.individualAudioWrapper:hover {
+  background-color: black;
+}
+
+.contextMenu {
+  display: flex;
+  position: fixed;
+  padding: 7px 0px;
+  border-radius: 4px;
+  flex-direction: column;
+  background-color: var(--primary);
+  z-index: 1000;
+
+  & button {
+    width: 200px;
+    text-align: left;
+    padding: 5px 0px 5px 20px;
+
+    &:hover {
+      background-color: red;
+    }
+  }
+}

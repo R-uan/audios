@@ -20,7 +20,7 @@ export function RightSection() {
           <ul className={style.queueList}>
             {queueContext.queue.map((audio) => {
               return (
-                <li className={style.queueItem} id={`queue.${audio.id}`}>
+                <li className={style.queueItem} key={`queue.${audio.id}`}>
                   <div>
                     <span>
                       {audio.title.length <= 45

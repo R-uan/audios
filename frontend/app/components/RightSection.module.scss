@@ -1,6 +1,6 @@
 .section {
   gap: 5px;
-  width: 350px;
+  width: 320px;
   display: flex;
   flex-direction: column;
   border-radius: var(--bradius);
@@ -13,9 +13,6 @@
   }
 }
 
-.queueListWrapper {
-  padding: 5px;
-}
 
 .queueList {
   gap: 5px;
@@ -26,16 +23,15 @@
 .queueItem {
   padding: 5px;
   position: relative;
-
   padding-left: 10px;
 
   &::before {
-    content: '';
-    position: absolute;
-    left: 0;
     top: 0;
+    left: 0;
     width: 3px;
+    content: '';
     height: 100%;
+    position: absolute;
     background-color: var(--secondary);
   }
 
