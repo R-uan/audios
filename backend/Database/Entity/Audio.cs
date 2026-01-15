@@ -14,6 +14,7 @@ namespace AudioCatalog.Database.Entity {
     public required Artist Artist { get; set; }
     public required DateTime AddedAt { get; set; }
     public AudioMetadata? Metadata { get; set; }
+    public List<Playlist>? Playlists { get; set; }
 
     public static Audio FromRequest(PostAudioRequest request, Artist artist) {
       var audioId = Guid.NewGuid();

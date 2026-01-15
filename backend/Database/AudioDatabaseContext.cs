@@ -1,12 +1,12 @@
-using System.Reflection.Metadata.Ecma335;
 using AudioCatalog.Database.Entity;
 using Microsoft.EntityFrameworkCore;
 
 namespace AudioCatalog.Database {
   public class AudioDatabaseContext(DbContextOptions<AudioDatabaseContext> options) : DbContext(options) {
-    public DbSet<Artist> Artists { get; set; }
-    public DbSet<Audio> Audios { get; set; }
     public DbSet<Tag> Tags { get; set; }
+    public DbSet<Audio> Audios { get; set; }
+    public DbSet<Artist> Artists { get; set; }
+    public DbSet<Playlist> Playlists { get; set; }
     public DbSet<AudioMetadata> AudioMetadata { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
@@ -40,6 +40,11 @@ namespace AudioCatalog.Database {
       modelBuilder.Entity<Tag>(tag => {
         tag.ToTable("tags");
         tag.HasKey(t => t.Id);
+      });
+
+      modelBuilder.Entity<Playlist>(p => {
+        p.ToTable("playlists");
+        p.HasMany(p => p.Audios).WithMany(a => a.Playlists);
       });
 
       base.OnModelCreating(modelBuilder);

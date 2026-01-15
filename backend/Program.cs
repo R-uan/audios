@@ -1,4 +1,5 @@
 using AudioCatalog.Database;
+using AudioCatalog.Middlewares;
 using AudioCatalog.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,18 +8,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAudioService, AudioService>();
+
 builder.Services.AddDbContext<AudioDatabaseContext>(options => {
   var connectionString = builder.Configuration.GetConnectionString("PostgresDb1");
   options.UseNpgsql(connectionString);
 });
 
-
+builder.Services.AddProblemDetails();
 var app = builder.Build();
+app.UseExceptionHandler();
 
-if (app.Environment.IsDevelopment()) {
-  app.MapOpenApi();
-}
-
+app.UseCors(options => { options.AllowAnyOrigin(); });
 app.UseHttpsRedirection();
 app.MapControllers();
+
 app.Run();
