@@ -4,38 +4,30 @@ import { useQueueContext } from "../context/QueueContext";
 import { IAudio } from "../models/IAudio";
 import style from "./AudioCatalog.module.scss";
 import { AudioWrapper } from "./AudioWrapper";
-
-interface ContextMenuType {
-  x: number;
-  y: number;
-  audio: IAudio;
-}
+import { usePlaylistContext } from "../context/PlaylistContext";
+import { useContextMenu } from "./ContextMenu";
 
 export function AudioCatalog() {
   const audioContext = useAudioContext();
   const queueContext = useQueueContext();
-  const [contextMenu, setContextMenu] = useState<ContextMenuType | null>(null);
+  const playlistContext = usePlaylistContext();
 
-  const handleContextMenu = useCallback((e: MouseEvent, audio: IAudio) => {
-    e.preventDefault();
-    setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
-      audio: audio, // Store which audio was right-clicked
-    });
-  }, []);
+  // Use the custom hook
+  const { handleRightClick, contextMenu, ContextMenu } =
+    useContextMenu<IAudio>("audio_catalog");
 
   const handleQueueAudio = () => {
-    if (contextMenu != null) queueContext.queueAudio(contextMenu?.audio);
+    if (contextMenu?.data) {
+      queueContext.queueAudio(contextMenu.data);
+    }
   };
 
-  const handlePlayNow = () => {};
-
-  useEffect(() => {
-    const handleCloseMenu = () => setContextMenu(null);
-    document.addEventListener("click", handleCloseMenu);
-    return () => document.removeEventListener("click", handleCloseMenu);
-  }, []);
+  const handlePlayNow = () => {
+    if (contextMenu?.data) {
+      // Add your play now logic here
+      console.log("Playing now:", contextMenu.data);
+    }
+  };
 
   return (
     <div className={style.catalog}>
@@ -46,29 +38,34 @@ export function AudioCatalog() {
       </header>
       <div>
         <ul className={style.audiosWrapper}>
-          {audioContext.audios.map((audio) => {
-            return (
-              <AudioWrapper
-                key={audio.id}
-                audio={audio}
-                onContextMenuHandler={handleContextMenu}
-              />
-            );
-          })}
+          {playlistContext.currentPlaylist == null
+            ? audioContext.audios.map((audio) => {
+                return (
+                  <AudioWrapper
+                    key={audio.id}
+                    audio={audio}
+                    onContextMenuHandler={handleRightClick}
+                  />
+                );
+              })
+            : playlistContext.currentPlaylist.audios.map((audioId) => {
+                const audio = audioContext.audios.find((a) => a.id == audioId);
+                if (audio != null)
+                  return (
+                    <AudioWrapper
+                      key={audio.id}
+                      audio={audio}
+                      onContextMenuHandler={handleRightClick}
+                    />
+                  );
+              })}
         </ul>
 
-        {contextMenu && (
-          <div
-            style={{
-              top: contextMenu.y,
-              left: contextMenu.x,
-            }}
-            className={style.contextMenu}
-          >
-            <button onClick={handlePlayNow}>Play now</button>
-            <button onClick={handleQueueAudio}>Add to queue</button>
-          </div>
-        )}
+        {/* Render the context menu using the component from the hook */}
+        <ContextMenu>
+          <button onClick={handlePlayNow}>Play now</button>
+          <button onClick={handleQueueAudio}>Add to queue</button>
+        </ContextMenu>
       </div>
     </div>
   );

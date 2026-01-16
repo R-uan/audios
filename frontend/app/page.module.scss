@@ -5,7 +5,7 @@
 .main {
   gap: 5px;
   height: 100%;
-  padding: 10px;
+  padding: 5px;
   display: flex;
   flex-direction: column;
 }
@@ -20,7 +20,7 @@
   gap: 5px;
   display: flex;
   flex-direction: row;
-  height: calc(100vh - 140px);
+  height: calc(100vh - 165px);
 }
 
 .queueControls {

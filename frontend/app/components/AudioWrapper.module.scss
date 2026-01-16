@@ -39,7 +39,7 @@
 }
 
 .individualAudioWrapper:hover {
-  background-color: black;
+  background-color: var(--secondary);
 }
 
 .contextMenu {
@@ -57,7 +57,7 @@
     padding: 5px 0px 5px 20px;
 
     &:hover {
-      background-color: red;
+      background-color: var(--secondary);
     }
   }
 }
