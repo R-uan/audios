@@ -1,4 +1,4 @@
-namespace AudioCatalog.Models {
+namespace AudioArchive.Models {
   public class ArtistPatchRequest {
     public string? Name { get; set; }
     public string? Reddit { get; set; }

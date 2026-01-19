@@ -1,4 +1,4 @@
-namespace AudioCatalog.Models {
+namespace AudioArchive.Models {
   public class CreatePlaylistRequest {
     public required string Name { get; set; }
     public List<Guid>? Audios { get; set; }

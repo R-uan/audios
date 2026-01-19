@@ -1,8 +1,8 @@
-using AudioCatalog.Models;
+using AudioArchive.Models;
 
-namespace AudioCatalog.Services {
+namespace AudioArchive.Services {
   public interface IAudioService {
-    Task<AudioView> StoreAudio(PostAudioRequest request);
-    Task<List<AudioView>> BulkStoreAudio(List<PostAudioRequest> requests);
+    Task<PartialAudioView> StoreAudio(PostAudioRequest request);
+    Task<List<PartialAudioView>> BulkStoreAudio(List<PostAudioRequest> requests);
   }
 }

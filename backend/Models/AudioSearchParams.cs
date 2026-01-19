@@ -1,4 +1,4 @@
-namespace AudioCatalog.Models {
+namespace AudioArchive.Models {
   public class AudioSearchParams {
     public string? Title { get; set; }
     public string? Artist { get; set; }

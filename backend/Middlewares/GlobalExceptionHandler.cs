@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AudioCatalog.Middlewares {
+namespace AudioArchive.Middlewares {
   public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> _logger) : IExceptionHandler {
     public async ValueTask<bool> TryHandleAsync(HttpContext ctx, Exception ex, CancellationToken cancellationToken) {
       _logger.LogDebug("Unexpected exception: {Message}", ex.Message);

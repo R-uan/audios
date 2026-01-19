@@ -1,6 +1,7 @@
-using AudioCatalog.Models;
+using System.Text.Json.Serialization;
+using AudioArchive.Models;
 
-namespace AudioCatalog.Database.Entity {
+namespace AudioArchive.Database.Entity {
   public class Audio {
     public required Guid Id { get; set; } = Guid.NewGuid();
     public required Guid ArtistId { get; set; }
@@ -13,11 +14,24 @@ namespace AudioCatalog.Database.Entity {
 
     public required Artist Artist { get; set; }
     public required DateTime AddedAt { get; set; }
-    public AudioMetadata? Metadata { get; set; }
+
+
+    [JsonIgnore]
     public List<Playlist>? Playlists { get; set; }
+    public required AudioMetadata Metadata { get; set; }
 
     public static Audio FromRequest(PostAudioRequest request, Artist artist) {
       var audioId = Guid.NewGuid();
+
+      var metadata = new AudioMetadata {
+        Id = Guid.NewGuid(),
+        Duration = request.Duration,
+        AudioId = audioId,
+        Genrer = request.Genrer,
+        Mood = request.Mood,
+        ReleaseYear = request.ReleaseYear,
+      };
+
       var audio = new Audio {
         Id = audioId,
         Artist = artist,
@@ -27,17 +41,9 @@ namespace AudioCatalog.Database.Entity {
         Source = request.Source,
         Title = request.Title,
         ArtistId = artist.Id,
+        Metadata = metadata
       };
 
-      audio.Metadata = new AudioMetadata {
-        Id = Guid.NewGuid(),
-        Duration = request.Duration,
-        AudioId = audioId,
-        Genrer = request.Genrer,
-        Mood = request.Mood,
-        ReleaseYear = request.ReleaseYear,
-        Audio = audio
-      };
       return audio;
     }
   }

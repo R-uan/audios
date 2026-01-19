@@ -1,6 +1,0 @@
-@AudioCatalog_HostAddress = http://localhost:5123
-
-GET {{AudioCatalog_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

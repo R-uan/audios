@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using AudioCatalog.Models;
+using AudioArchive.Models;
 
-namespace AudioCatalog.Database.Entity {
+namespace AudioArchive.Database.Entity {
   public class Artist {
     public required Guid Id { get; set; } = Guid.NewGuid();
     public required string Name { get; set; }

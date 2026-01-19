@@ -1,10 +1,10 @@
-using AudioCatalog.Database;
-using AudioCatalog.Database.Entity;
-using AudioCatalog.Models;
+using AudioArchive.Database;
+using AudioArchive.Database.Entity;
+using AudioArchive.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace AudioCatalog.Controllers {
+namespace AudioArchive.Controllers {
   [ApiController]
   [Route("api/playlist")]
   public class PlaylistController(AudioDatabaseContext ctx) : ControllerBase {

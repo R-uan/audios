@@ -1,6 +1,6 @@
-using AudioCatalog.Database;
-using AudioCatalog.Middlewares;
-using AudioCatalog.Services;
+using AudioArchive.Database;
+using AudioArchive.Middlewares;
+using AudioArchive.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

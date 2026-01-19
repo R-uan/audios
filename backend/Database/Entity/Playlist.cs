@@ -1,6 +1,6 @@
-using AudioCatalog.Models;
+using AudioArchive.Models;
 
-namespace AudioCatalog.Database.Entity {
+namespace AudioArchive.Database.Entity {
   public class Playlist {
     public required Guid Id { get; set; }
     public required string Name { get; set; }

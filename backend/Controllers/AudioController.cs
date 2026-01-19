@@ -1,17 +1,17 @@
-using AudioCatalog.Models;
-using AudioCatalog.Services;
-using AudioCatalog.Database;
+using AudioArchive.Models;
+using AudioArchive.Services;
+using AudioArchive.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace AudioCatalog.Controllers {
+namespace AudioArchive.Controllers {
   [ApiController]
   [Route("api/audio")]
   public class AudioController(AudioDatabaseContext database, IAudioService service_) : ControllerBase {
     [HttpGet]
     public async Task<IActionResult> GetAudios() {
       var audios = await database.Audios
-        .Select(audio => new AudioView {
+        .Select(audio => new PartialAudioView {
           Id = audio.Id,
           Title = audio.Title,
           Artist = audio.Artist.Name,
@@ -22,6 +22,24 @@ namespace AudioCatalog.Controllers {
         })
         .ToListAsync();
       return Ok(audios);
+    }
+
+    [HttpGet("{audioId}")]
+    public async Task<IActionResult> GetAudio([FromRoute] string audioId, [FromQuery] bool full = false) {
+      if (!Guid.TryParse(audioId, out var id)) return BadRequest("Invalid audio id.");
+
+      var audio = await database.Audios
+        .Include(a => a.Artist)
+        .Include(a => a.Metadata)
+          .ThenInclude(m => m.Tags)
+        .Where(a => a.Id == id)
+        .FirstOrDefaultAsync();
+
+      if (audio == null) return NotFound();
+
+      return full ?
+        base.Ok(FullAudioView.FromAudio(audio)) :
+        base.Ok(PartialAudioView.FromAudio(audio));
     }
 
     [HttpPost]
@@ -86,7 +104,7 @@ namespace AudioCatalog.Controllers {
           query = query.Where(a => a.Metadata!.Duration != null && a.Metadata!.Duration <= parameters.MaxDuration);
         }
 
-        var audios = await query.Select(audio => new AudioView {
+        var audios = await query.Select(audio => new PartialAudioView {
           Id = audio.Id,
           Title = audio.Title,
           Artist = audio.Artist.Name,

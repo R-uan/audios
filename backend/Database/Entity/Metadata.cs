@@ -1,6 +1,6 @@
-using AudioCatalog.Models;
+using System.Text.Json.Serialization;
 
-namespace AudioCatalog.Database.Entity {
+namespace AudioArchive.Database.Entity {
   public class AudioMetadata {
     public required Guid Id { get; set; }
     public required Guid AudioId { get; set; }
@@ -8,7 +8,10 @@ namespace AudioCatalog.Database.Entity {
     public string? Genrer { get; set; }
     public int? Duration { get; set; }
     public string? Mood { get; set; }
+
     public List<Tag>? Tags { get; set; }
-    public required Audio Audio { get; set; }
+
+    [JsonIgnore]
+    public Audio? Audio { get; set; }
   }
 }

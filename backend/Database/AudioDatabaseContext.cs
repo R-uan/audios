@@ -1,7 +1,7 @@
-using AudioCatalog.Database.Entity;
+using AudioArchive.Database.Entity;
 using Microsoft.EntityFrameworkCore;
 
-namespace AudioCatalog.Database {
+namespace AudioArchive.Database {
   public class AudioDatabaseContext(DbContextOptions<AudioDatabaseContext> options) : DbContext(options) {
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Audio> Audios { get; set; }

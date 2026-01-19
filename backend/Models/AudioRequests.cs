@@ -1,4 +1,4 @@
-namespace AudioCatalog.Models {
+namespace AudioArchive.Models {
   public class PostAudioRequest {
     public required string Title { get; set; }
     public required string Artist { get; set; }
