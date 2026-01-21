@@ -21,7 +21,6 @@ export default function Home() {
                 <div className={style.middleSection}>
                   <LeftSection />
                   <AudioCatalog />
-                  <RightSection />
                 </div>
                 <div className={style.queueControls}></div>
               </main>

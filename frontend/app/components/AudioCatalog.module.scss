@@ -1,16 +1,14 @@
 .catalog {
-  flex: 1;
-  min-width: 400px;
-  padding: 3px;
   height: 100%;
-  border-radius: var(--bradius);
-  overflow: scroll;
-  scrollbar-width: thin;
-
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  display: flex;
+  width: 750px;
+  min-width: 500px;
+  position: relative;
+  flex-direction: column;
+  border: 1px solid var(--secondary);
 
   &>header {
+    padding: 5px;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -19,32 +17,21 @@
       font-size: 1.2rem;
     }
   }
+
+  .audioWrapper {
+    flex: 1;
+    overflow: scroll;
+    scrollbar-width: thin;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
 }
 
-.audiosWrapper {
+.audioList {
   display: flex;
-  position: relative;
-  flex-direction: column;
   padding: 10px;
+  flex-direction: column;
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 1px;
-    height: 100%;
-    background-color: var(--secondary);
-  }
-
-  &::before {
-    left: 0;
-  }
-
-  &::after {
-    right: 0;
-  }
 
   .individualAudioWrapper {
     gap: 10px;

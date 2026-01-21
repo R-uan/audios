@@ -8,8 +8,10 @@ import {
 import { IPlaylist } from "../models/IPlaylist";
 
 interface PlaylistContextType {
+  addPlaylist: (playlist: IPlaylist) => void;
   playlists: Map<string, IPlaylist>;
   currentPlaylist: IPlaylist | null;
+  removePlaylist: (id: string) => void;
   setCurrentPlaylist: (id: string | null) => void;
 }
 
@@ -21,6 +23,18 @@ export function PlaylistContextProvider({ children }: { children: ReactNode }) {
   const [playlists, setPlaylists] = useState<Map<string, IPlaylist>>(new Map());
   const [currentPlaylist, setCurrent] = useState<IPlaylist | null>(null);
   const [fetching, setFetching] = useState(false);
+
+  const addPlaylist = (playlist: IPlaylist) => {
+    const newMap = playlists;
+    newMap.set(playlist.id, playlist);
+    setPlaylists(newMap);
+  };
+
+  const removePlaylist = (id: string) => {
+    const newMap = playlists;
+    newMap.delete(id);
+    setPlaylists(newMap);
+  };
 
   const setCurrentPlaylist = (id: string | null) => {
     if (id != null) {
@@ -50,7 +64,13 @@ export function PlaylistContextProvider({ children }: { children: ReactNode }) {
 
   return (
     <PlaylistContext.Provider
-      value={{ playlists, currentPlaylist, setCurrentPlaylist }}
+      value={{
+        playlists,
+        currentPlaylist,
+        setCurrentPlaylist,
+        removePlaylist,
+        addPlaylist,
+      }}
     >
       {children}
     </PlaylistContext.Provider>

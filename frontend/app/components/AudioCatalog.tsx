@@ -33,13 +33,30 @@ export function AudioCatalog() {
     <div className={style.catalog}>
       <header>
         <div>
-          <span>placeholder</span>
+          <span>
+            {playlistContext.currentPlaylist
+              ? playlistContext.currentPlaylist.name
+              : "All Audios"}
+          </span>
         </div>
       </header>
-      <div>
-        <ul className={style.audiosWrapper}>
-          {playlistContext.currentPlaylist == null
-            ? audioContext.audios.map((audio) => {
+      <hr className="ml-4 mr-4 text-[var(--secondary)]" />
+      <div className={style.audioWrapper}>
+        <ul className={style.audioList}>
+          {playlistContext.currentPlaylist == null ? (
+            audioContext.audios.map((audio) => {
+              return (
+                <AudioWrapper
+                  key={audio.id}
+                  audio={audio}
+                  onContextMenuHandler={handleRightClick}
+                />
+              );
+            })
+          ) : playlistContext.currentPlaylist.audios != null ? (
+            playlistContext.currentPlaylist.audios.map((audioId) => {
+              const audio = audioContext.audios.find((a) => a.id == audioId);
+              if (audio != null)
                 return (
                   <AudioWrapper
                     key={audio.id}
@@ -47,18 +64,10 @@ export function AudioCatalog() {
                     onContextMenuHandler={handleRightClick}
                   />
                 );
-              })
-            : playlistContext.currentPlaylist.audios.map((audioId) => {
-                const audio = audioContext.audios.find((a) => a.id == audioId);
-                if (audio != null)
-                  return (
-                    <AudioWrapper
-                      key={audio.id}
-                      audio={audio}
-                      onContextMenuHandler={handleRightClick}
-                    />
-                  );
-              })}
+            })
+          ) : (
+            <div>Hello</div>
+          )}
         </ul>
 
         {/* Render the context menu using the component from the hook */}
