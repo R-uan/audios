@@ -14,11 +14,18 @@ builder.Services.AddDbContext<AudioDatabaseContext>(options => {
   options.UseNpgsql(connectionString);
 });
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+builder.Services.AddCors(options => {
+  options.AddPolicy("AllowAll", policy => {
+    policy.AllowAnyOrigin()
+          .AllowAnyMethod()
+          .AllowAnyHeader();
+  });
+});
 var app = builder.Build();
 app.UseExceptionHandler();
-
-app.UseCors(options => { options.AllowAnyOrigin(); });
+app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 app.MapControllers();
 

@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore;
 namespace AudioArchive.Controllers {
   [ApiController]
   [Route("api/playlist")]
-  public class PlaylistController(AudioDatabaseContext ctx) : ControllerBase {
+  public class PlaylistController(AudioDatabaseContext _database) : ControllerBase {
     [HttpGet]
     public async Task<IActionResult> GetPlaylists() {
-      var playlists = await ctx.Playlists
+      var playlists = await _database.Playlists
         .Include(p => p.Audios)
         .Select(p => new {
           p.Id,
@@ -23,7 +23,7 @@ namespace AudioArchive.Controllers {
 
     [HttpGet("{playlistId}")]
     public async Task<IActionResult> GetPlaylist([FromRoute] Guid playlistId) {
-      var playlist = await ctx.Playlists
+      var playlist = await _database.Playlists
         .Include(p => p.Audios)
         .Select(p => new {
           p.Id,
@@ -36,18 +36,17 @@ namespace AudioArchive.Controllers {
 
     [HttpPost]
     public async Task<IActionResult> CreatePlaylist([FromBody] CreatePlaylistRequest request) {
-      var transaction = await ctx.Database.BeginTransactionAsync();
+      var transaction = await _database.Database.BeginTransactionAsync();
       try {
         var playlist = Playlist.FromRequest(request);
-
         if (request.Audios != null && request.Audios.Count != 0) {
           var validIds = request.Audios.Where(a => a != Guid.Empty);
-          var existingAudios = await ctx.Audios.Where(a => validIds.Contains(a.Id)).ToListAsync();
+          var existingAudios = await _database.Audios.Where(a => validIds.Contains(a.Id)).ToListAsync();
           playlist.Audios = existingAudios;
         }
 
-        var save = await ctx.Playlists.AddAsync(playlist);
-        await ctx.SaveChangesAsync();
+        var save = await _database.Playlists.AddAsync(playlist);
+        await _database.SaveChangesAsync();
         await transaction.CommitAsync();
 
         return base.Ok(new {
@@ -62,6 +61,16 @@ namespace AudioArchive.Controllers {
       }
     }
 
+    [HttpDelete("{playlistId}")]
+    public async Task<IActionResult> DeletePlaylis([FromRoute] string playlistId) {
+      if (!Guid.TryParse(playlistId, out var playlistGuid)) return base.BadRequest("Invalid id");
+      var playlist = await _database.Playlists.FindAsync(playlistGuid);
+      if (playlist == null) return base.NotFound("Playlist not found.");
+      _database.Playlists.Remove(playlist);
+      await _database.SaveChangesAsync();
+      return base.Ok(new { Deleted = playlistId });
+    }
+
     [HttpPatch("{playlistId}")]
     public async Task<IActionResult> UpdatePlaylist(
         [FromRoute] string playlistId,
@@ -69,7 +78,7 @@ namespace AudioArchive.Controllers {
       ) {
       if (!Guid.TryParse(playlistId, out var guidId)) return base.BadRequest(new { error = "Invalid GUID format" });
 
-      var playlist = await ctx.Playlists.Include(p => p.Audios).FirstOrDefaultAsync(p => p.Id == guidId);
+      var playlist = await _database.Playlists.Include(p => p.Audios).FirstOrDefaultAsync(p => p.Id == guidId);
       if (playlist == null) return base.NotFound(new { result = "Playlist was not found." });
 
       if (!string.IsNullOrEmpty(request.Name)) playlist.Name = request.Name;
@@ -83,12 +92,12 @@ namespace AudioArchive.Controllers {
       var addedAudios = 0;
       if (request.AddAudios?.Count > 0) {
         var validAudioIds = request.AddAudios.Where(a => a != Guid.Empty);
-        var existingAudios = await ctx.Audios.Where(a => validAudioIds.Contains(a.Id)).ToListAsync();
+        var existingAudios = await _database.Audios.Where(a => validAudioIds.Contains(a.Id)).ToListAsync();
         (playlist.Audios ??= []).AddRange(existingAudios);
         addedAudios = existingAudios.Count;
       }
 
-      await ctx.SaveChangesAsync();
+      await _database.SaveChangesAsync();
       return base.Ok(new { addedAudios, removedAudios });
     }
   }
