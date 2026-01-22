@@ -1,16 +1,18 @@
 import { MouseEvent, useCallback, useEffect, useState } from "react";
 import { useAudioContext } from "../context/AudioContext";
-import { useQueueContext } from "../context/QueueContext";
+import { QueueContextProvider, useQueueContext } from "../context/QueueContext";
 import { IAudio } from "../models/IAudio";
 import style from "./AudioCatalog.module.scss";
 import { AudioWrapper } from "./AudioWrapper";
 import { usePlaylistContext } from "../context/PlaylistContext";
 import { useContextMenu } from "./ContextMenu";
+import { usePlayerContext } from "../context/PlayerContext";
 
 export function AudioCatalog() {
   const audioContext = useAudioContext();
   const queueContext = useQueueContext();
   const playlistContext = usePlaylistContext();
+  const playerContext = usePlayerContext();
 
   // Use the custom hook
   const { handleRightClick, contextMenu, ContextMenu } =
@@ -23,10 +25,7 @@ export function AudioCatalog() {
   };
 
   const handlePlayNow = () => {
-    if (contextMenu?.data) {
-      // Add your play now logic here
-      console.log("Playing now:", contextMenu.data);
-    }
+    if (contextMenu?.data) queueContext.playNow(contextMenu.data);
   };
 
   return (

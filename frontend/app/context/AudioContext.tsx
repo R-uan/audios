@@ -9,6 +9,7 @@ import {
 import { IAudio } from "../models/IAudio";
 
 interface AudioContextType {
+  fetching: boolean;
   audios: IAudio[];
   addAudio: (audio: IAudio) => void;
 }
@@ -41,7 +42,7 @@ export function AudioContextProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AudioContext.Provider value={{ audios, addAudio }}>
+    <AudioContext.Provider value={{ audios, addAudio, fetching }}>
       {children}
     </AudioContext.Provider>
   );

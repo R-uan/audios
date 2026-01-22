@@ -18,9 +18,12 @@ export function RightSection() {
       <div>
         <div className={style.queueListWrapper}>
           <ul className={style.queueList}>
-            {queueContext.queue.map((audio) => {
+            {queueContext.queue.map((audio, index) => {
               return (
-                <li className={style.queueItem} key={`queue.${audio.id}`}>
+                <li
+                  className={style.queueItem}
+                  key={`queue.${audio.id}${index}`}
+                >
                   <div>
                     <span>
                       {audio.title.length <= 45
