@@ -10,7 +10,7 @@ namespace AudioArchive.Database.Entity {
     [JsonIgnore]
     public List<Audio>? Audios { get; set; }
 
-    public static Artist From(ArtistPostRequest request) {
+    public static Artist From(PostArtistRequest request) {
       return new Artist {
         Id = Guid.NewGuid(),
         Name = request.Name,

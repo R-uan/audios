@@ -3,6 +3,8 @@ using AudioArchive.Services;
 using AudioArchive.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using AudioArchive.Database.Entity;
+using AudioArchive.Shared;
 
 namespace AudioArchive.Controllers {
   [ApiController]
@@ -33,9 +35,7 @@ namespace AudioArchive.Controllers {
         .Include(a => a.Metadata)
           .ThenInclude(m => m.Tags)
         .Where(a => a.Id == id)
-        .FirstOrDefaultAsync();
-
-      if (audio == null) return NotFound();
+        .FirstOrDefaultAsync() ?? throw new NotFoundException("Audio", audioId);
 
       return full ?
         base.Ok(FullAudioView.FromAudio(audio)) :
@@ -119,5 +119,11 @@ namespace AudioArchive.Controllers {
         return StatusCode(500);
       }
     }
+
+    [HttpPatch("{audioId}")]
+    public async Task<IActionResult>
+      PatchAudio([FromRoute] Guid audioId, [FromBody] PatchAudioRequest request) =>
+        Ok(await service_.UpdateAudio(audioId, request));
+
   }
 }

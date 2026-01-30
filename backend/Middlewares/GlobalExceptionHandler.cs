@@ -1,3 +1,4 @@
+using AudioArchive.Shared;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,6 +13,14 @@ namespace AudioArchive.Middlewares {
         Status = StatusCodes.Status500InternalServerError,
         Instance = ctx.Request.Path
       };
+
+      if (ex is NotFoundException) {
+        problemDetails = new ProblemDetails {
+          Status = StatusCodes.Status404NotFound,
+          Detail = ex.Message,
+          Instance = ctx.Request.Path
+        };
+      }
 
       await ctx.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
       return true;

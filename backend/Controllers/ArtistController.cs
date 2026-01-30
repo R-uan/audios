@@ -21,7 +21,7 @@ namespace AudioArchive.Controllers {
     }
 
     [HttpPost]
-    public async Task<IActionResult> PostArtist([FromBody] ArtistPostRequest body) {
+    public async Task<IActionResult> PostArtist([FromBody] PostArtistRequest body) {
       var artist = Artist.From(body);
       var operation = await database.Artists.AddAsync(artist);
       await database.SaveChangesAsync();
@@ -29,7 +29,8 @@ namespace AudioArchive.Controllers {
     }
 
     [HttpPatch("{artistId}")]
-    public async Task<IActionResult> UpdateArtistInfo([FromRoute] int artistId, [FromBody] ArtistPatchRequest body) {
+    public async Task<IActionResult> PatchArtist(
+        [FromRoute] int artistId, [FromBody] PatchArtistRequest body) {
       var artist = await database.Artists.FindAsync(artistId);
       if (artist == null) return NotFound("Artist not found.");
       if (body.Name != null) artist.Name = body.Name;
