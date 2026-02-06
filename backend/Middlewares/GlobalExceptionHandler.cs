@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AudioArchive.Middlewares {
   public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> _logger) : IExceptionHandler {
     public async ValueTask<bool> TryHandleAsync(HttpContext ctx, Exception ex, CancellationToken cancellationToken) {
-      _logger.LogDebug("Unexpected exception: {Message}", ex.Message);
+      Console.WriteLine(ex);
       ctx.Response.StatusCode = 500;
 
       var problemDetails = new ProblemDetails {

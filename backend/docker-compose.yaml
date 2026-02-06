@@ -1,4 +1,14 @@
 services:
+  audio_archive_cache:
+    image: redis:7-alpine
+    container_name: audio_archive_cache 
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
   audio_catalog_database:
     image: postgres 
     container_name: media_catalog
@@ -25,3 +35,4 @@ services:
 
 volumes:
   pgsql:
+  redis_data:

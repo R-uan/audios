@@ -167,5 +167,36 @@ namespace AudioArchive.Services {
       await database.SaveChangesAsync();
       return PartialAudioView.FromAudio(audio);
     }
+
+    public async Task<List<PartialAudioView>> QueryAudios(AudioSearchParams parameters) {
+      var query = database.Audios.AsQueryable();
+      if (!string.IsNullOrEmpty(parameters.Artist))
+        query = query.Where(a => EF.Functions.ILike(a.Artist.Name, $"%{parameters.Artist}%"));
+
+      if (!string.IsNullOrEmpty(parameters.Title))
+        query = query.Where(a => EF.Functions.ILike(a.Title, $"%{parameters.Title}%"));
+
+      if (parameters.Tags != null) {
+        foreach (var tag in parameters.Tags)
+          query = query.Where(a => a.Metadata.Tags != null && a.Metadata.Tags.Any(t => t.Name == tag));
+      }
+
+      if (parameters.MinDuration > 0)
+        query = query.Where(a => a.Metadata.Tags != null && a.Metadata.Duration >= parameters.MinDuration);
+
+      if (parameters.MaxDuration > 0) {
+        query = query.Where(a => a.Metadata.Duration != null && a.Metadata.Duration <= parameters.MaxDuration);
+      }
+
+      return await query.Select(audio => new PartialAudioView {
+        Id = audio.Id,
+        Title = audio.Title,
+        Artist = audio.Artist.Name,
+        Source = audio.Source,
+        Link = audio.Link,
+        AddedAt = audio.AddedAt,
+        Duration = audio.Metadata != null ? audio.Metadata.Duration : 0
+      }).ToListAsync();
+    }
   }
 }

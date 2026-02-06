@@ -9,102 +9,17 @@ using AudioArchive.Shared;
 namespace AudioArchive.Controllers {
   [ApiController]
   [Route("api/audio")]
-  public class AudioController(AudioDatabaseContext database, IAudioService service_) : ControllerBase {
+  public class AudioController(
+      AudioDatabaseContext _database,
+      IAudioService _service,
+      ICachingService _caching
+      ) : ControllerBase {
     [HttpGet]
     public async Task<IActionResult> GetAudios() {
-      var audios = await database.Audios
-        .Select(audio => new PartialAudioView {
-          Id = audio.Id,
-          Title = audio.Title,
-          Artist = audio.Artist.Name,
-          Source = audio.Source,
-          Link = audio.Link,
-          AddedAt = audio.AddedAt,
-          Duration = audio.Metadata != null ? audio.Metadata.Duration : 0
-        })
-        .ToListAsync();
-      return Ok(audios);
-    }
+      var audios = await _caching.GetValueAsync<List<PartialAudioView>>("getAudios");
 
-    [HttpGet("{audioId}")]
-    public async Task<IActionResult> GetAudio([FromRoute] string audioId, [FromQuery] bool full = false) {
-      if (!Guid.TryParse(audioId, out var id)) return BadRequest("Invalid audio id.");
-
-      var audio = await database.Audios
-        .Include(a => a.Artist)
-        .Include(a => a.Metadata)
-          .ThenInclude(m => m.Tags)
-        .Where(a => a.Id == id)
-        .FirstOrDefaultAsync() ?? throw new NotFoundException("Audio", audioId);
-
-      return full ?
-        base.Ok(FullAudioView.FromAudio(audio)) :
-        base.Ok(PartialAudioView.FromAudio(audio));
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> PostAudio([FromBody] PostAudioRequest request) {
-      try {
-        var audioView = await service_.StoreAudio(request);
-        return Ok(audioView);
-      } catch (Exception) {
-        Console.WriteLine("Get a real logger");
-        return StatusCode(500);
-      }
-    }
-
-    [HttpPost("bulk")]
-    public async Task<IActionResult> PostMultipleAudios([FromBody] List<PostAudioRequest> request) {
-      try {
-        var audioView = await service_.BulkStoreAudio(request);
-        return Ok(audioView);
-      } catch (Exception ex) {
-        Console.WriteLine(ex);
-        return StatusCode(500);
-      }
-    }
-
-    [HttpDelete("{audioId}")]
-    public async Task<IActionResult> DeleteAudio([FromRoute] int audioId) {
-      try {
-        var audio = await database.Audios.FindAsync(audioId);
-        if (audio == null) return NotFound($"Audio not found {audioId}");
-        database.Audios.Remove(audio);
-        await database.SaveChangesAsync();
-        return Ok();
-      } catch (Exception) {
-        Console.WriteLine("get a real logger");
-        return StatusCode(500);
-      }
-    }
-
-    [HttpGet("q")]
-    public async Task<IActionResult> QueryAudios([FromQuery] AudioSearchParams parameters) {
-      try {
-        var query = database.Audios.AsQueryable();
-        if (!string.IsNullOrEmpty(parameters.Artist)) {
-          query = query.Where(a => EF.Functions.ILike(a.Artist.Name, $"%{parameters.Artist}%"));
-        }
-
-        if (!string.IsNullOrEmpty(parameters.Title)) {
-          query = query.Where(a => EF.Functions.ILike(a.Title, $"%{parameters.Title}%"));
-        }
-
-        if (parameters.Tags != null) {
-          foreach (var tag in parameters.Tags) {
-            query = query.Where(a => a.Metadata!.Tags != null && a.Metadata!.Tags.Any(t => t.Name == tag));
-          }
-        }
-
-        if (parameters.MinDuration > 0) {
-          query = query.Where(a => a.Metadata!.Tags != null && a.Metadata.Duration >= parameters.MinDuration);
-        }
-
-        if (parameters.MaxDuration > 0) {
-          query = query.Where(a => a.Metadata!.Duration != null && a.Metadata!.Duration <= parameters.MaxDuration);
-        }
-
-        var audios = await query.Select(audio => new PartialAudioView {
+      if (audios == null) {
+        audios = await _database.Audios.Select(audio => new PartialAudioView {
           Id = audio.Id,
           Title = audio.Title,
           Artist = audio.Artist.Name,
@@ -113,17 +28,77 @@ namespace AudioArchive.Controllers {
           AddedAt = audio.AddedAt,
           Duration = audio.Metadata != null ? audio.Metadata.Duration : 0
         }).ToListAsync();
-        return Ok(audios);
-      } catch (Exception) {
-        Console.WriteLine("get a real logger");
-        return StatusCode(500);
+
+        await _caching.SetValueAsync("getAudios", audios);
       }
+
+      return Ok(new {
+        audios.Count,
+        Data = audios,
+      });
+    }
+
+    [HttpGet("{audioId}")]
+    public async Task<IActionResult> GetAudio([FromRoute] string audioId, [FromQuery] bool full = false) {
+      if (!Guid.TryParse(audioId, out var id)) return base.BadRequest("The Audio ID is invalid.");
+      var audio = await _caching.GetValueAsync<Audio>(audioId);
+
+      if (audio == null) {
+        audio = await _database.Audios.Include(a => a.Artist)
+          .Include(a => a.Metadata).ThenInclude(m => m.Tags)
+          .Where(a => a.Id == id).FirstOrDefaultAsync()
+          ?? throw new NotFoundException("Audio", audioId);
+
+        await _caching.SetValueAsync(audioId, audio);
+      }
+
+      return full ?
+        base.Ok(FullAudioView.FromAudio(audio)) :
+        base.Ok(PartialAudioView.FromAudio(audio));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> PostAudio([FromBody] PostAudioRequest request)
+      => base.Ok(await _service.StoreAudio(request));
+
+    [HttpPost("bulk")]
+    public async Task<IActionResult> PostMultipleAudios([FromBody] List<PostAudioRequest> request)
+      => Ok(await _service.BulkStoreAudio(request));
+
+    [HttpDelete("{audioId}")]
+    public async Task<IActionResult> DeleteAudio([FromRoute] string audioId) {
+      if (!Guid.TryParse(audioId, out var id))
+        return base.BadRequest("The Audio ID is invalid.");
+
+      var audio = await _database.Audios.FindAsync(id)
+        ?? throw new NotFoundException("Audio", audioId);
+
+      _database.Audios.Remove(audio);
+      await _database.SaveChangesAsync();
+
+      return Ok(new { Success = true, Target = audioId });
+    }
+
+    [HttpGet("q")]
+    public async Task<IActionResult> QueryAudios([FromQuery] AudioSearchParams parameters) {
+      // The path containst the query (or I assume) so it can be used as the key for caching;
+      var requestPath = HttpContext.Request.Path.ToString();
+      var audios = await _caching.GetValueAsync<List<PartialAudioView>>(requestPath);
+
+      if (audios == null) {
+        audios = await _service.QueryAudios(parameters);
+        await _caching.SetValueAsync(requestPath, audios);
+      }
+
+      return base.Ok(new {
+        audios.Count,
+        Data = audios
+      });
     }
 
     [HttpPatch("{audioId}")]
     public async Task<IActionResult>
       PatchAudio([FromRoute] Guid audioId, [FromBody] PatchAudioRequest request) =>
-        Ok(await service_.UpdateAudio(audioId, request));
-
+        Ok(await _service.UpdateAudio(audioId, request));
   }
 }
