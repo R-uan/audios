@@ -1,8 +1,10 @@
 using System.Text.Json;
 using StackExchange.Redis;
 
-namespace AudioArchive.Services {
-  public class CachingService(IConnectionMultiplexer _redis) : ICachingService {
+namespace AudioArchive.Services
+{
+  public class CachingService(IConnectionMultiplexer _redis) : ICachingService
+  {
     public async Task SetValueAsync<T>(string key, T value) {
       var json = JsonSerializer.Serialize(value);
       var database = _redis.GetDatabase();

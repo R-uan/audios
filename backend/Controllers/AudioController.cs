@@ -5,18 +5,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AudioArchive.Database.Entity;
 using AudioArchive.Shared;
+using Microsoft.AspNetCore.Http.Extensions;
 
-namespace AudioArchive.Controllers {
+namespace AudioArchive.Controllers
+{
   [ApiController]
   [Route("api/audio")]
   public class AudioController(
       AudioDatabaseContext _database,
       IAudioService _service,
-      ICachingService _caching
-      ) : ControllerBase {
+      ICachingService _caching)
+    : ControllerBase
+  {
+
     [HttpGet]
     public async Task<IActionResult> GetAudios() {
-      var audios = await _caching.GetValueAsync<List<PartialAudioView>>("getAudios");
+      var requestPath = HttpContext.Request.GetDisplayUrl();
+      var cachingKey = $"getAudios:{requestPath}";
+
+      var audios = await _caching.GetValueAsync<List<PartialAudioView>>(cachingKey);
 
       if (audios == null) {
         audios = await _database.Audios.Select(audio => new PartialAudioView {
@@ -29,7 +36,7 @@ namespace AudioArchive.Controllers {
           Duration = audio.Metadata != null ? audio.Metadata.Duration : 0
         }).ToListAsync();
 
-        await _caching.SetValueAsync("getAudios", audios);
+        await _caching.SetValueAsync(cachingKey, audios);
       }
 
       return Ok(new {
@@ -40,8 +47,11 @@ namespace AudioArchive.Controllers {
 
     [HttpGet("{audioId}")]
     public async Task<IActionResult> GetAudio([FromRoute] string audioId, [FromQuery] bool full = false) {
+      var requestPath = HttpContext.Request.GetDisplayUrl();
+      var cachingKey = $"getAudio:{requestPath}";
+
       if (!Guid.TryParse(audioId, out var id)) return base.BadRequest("The Audio ID is invalid.");
-      var audio = await _caching.GetValueAsync<Audio>(audioId);
+      var audio = await _caching.GetValueAsync<Audio>(cachingKey);
 
       if (audio == null) {
         audio = await _database.Audios.Include(a => a.Artist)
@@ -49,7 +59,7 @@ namespace AudioArchive.Controllers {
           .Where(a => a.Id == id).FirstOrDefaultAsync()
           ?? throw new NotFoundException("Audio", audioId);
 
-        await _caching.SetValueAsync(audioId, audio);
+        await _caching.SetValueAsync(cachingKey, audio);
       }
 
       return full ?
@@ -82,12 +92,13 @@ namespace AudioArchive.Controllers {
     [HttpGet("q")]
     public async Task<IActionResult> QueryAudios([FromQuery] AudioSearchParams parameters) {
       // The path containst the query (or I assume) so it can be used as the key for caching;
-      var requestPath = HttpContext.Request.Path.ToString();
-      var audios = await _caching.GetValueAsync<List<PartialAudioView>>(requestPath);
+      var requestPath = HttpContext.Request.GetDisplayUrl();
+      var cachingKey = $"queryAudio:{requestPath}";
+      var audios = await _caching.GetValueAsync<List<PartialAudioView>>(cachingKey);
 
       if (audios == null) {
         audios = await _service.QueryAudios(parameters);
-        await _caching.SetValueAsync(requestPath, audios);
+        await _caching.SetValueAsync(cachingKey, audios);
       }
 
       return base.Ok(new {

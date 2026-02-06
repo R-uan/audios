@@ -8,8 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+// Services
 builder.Services.AddScoped<IAudioService, AudioService>();
 builder.Services.AddScoped<ICachingService, CachingService>();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddDbContext<AudioDatabaseContext>(options => {
   var connectionString = builder.Configuration.GetConnectionString("PostgresDb1");
@@ -23,8 +27,6 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp => {
   return ConnectionMultiplexer.Connect(configuration);
 });
 
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
 
 builder.Services.AddCors(options => {
   options.AddPolicy("AllowAll", policy => {
