@@ -6,7 +6,6 @@ import {
   createContext,
   useContext,
 } from "react";
-import style from "./ContextMenu.module.scss"; // Adjust path as needed
 
 // Global context for managing a single context menu across the app
 interface ContextMenuState {
@@ -29,26 +28,13 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const handleCloseMenu = (e: MouseEvent) => {
-      // Don't close if right-clicking (we want to allow new context menus)
-      if (e.button === 2) {
-        return;
-      }
-
-      // Don't close if clicking inside the context menu
+      if (e.button === 2) return;
       const target = e.target as HTMLElement;
-      if (target.closest(`.${style.contextMenu}`)) {
-        return;
-      }
-
+      if (target.closest("[data-context-menu]")) return;
       setContextMenu(null);
     };
-
-    // Only listen for left clicks to close the menu
     document.addEventListener("mousedown", handleCloseMenu);
-
-    return () => {
-      document.removeEventListener("mousedown", handleCloseMenu);
-    };
+    return () => document.removeEventListener("mousedown", handleCloseMenu);
   }, []);
 
   return (
@@ -58,34 +44,27 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Hook to use in components
 export function useContextMenu<T>(id: string) {
   const context = useContext(ContextMenuContext);
-
   if (!context) {
     throw new Error("useContextMenu must be used within ContextMenuProvider");
   }
-
   const { contextMenu, setContextMenu } = context;
+
+  const closeContextMenu = () => {
+    setContextMenu(null);
+  };
 
   const handleRightClick = useCallback(
     (event: React.MouseEvent, data: T) => {
       event.preventDefault();
       event.stopPropagation();
-      // Prevent immediate propagation to stop multiple handlers on the same element
       event.nativeEvent.stopImmediatePropagation();
-
-      console.log("Right click triggered", {
-        x: event.clientX,
-        y: event.clientY,
-        data,
-      });
-
       setContextMenu({
         x: event.clientX,
         y: event.clientY,
-        data: data,
-        id: id,
+        data,
+        id,
       });
     },
     [id, setContextMenu],
@@ -93,17 +72,13 @@ export function useContextMenu<T>(id: string) {
 
   const ContextMenuComponent = useCallback(
     ({ children }: { children: ReactNode }) => {
-      // Only render if this is the active context menu
       if (!contextMenu || contextMenu.id !== id) return null;
-
       return (
         <div
-          style={{
-            top: contextMenu.y,
-            left: contextMenu.x,
-          }}
-          className={style.contextMenu}
+          data-context-menu
           onContextMenu={(e) => e.preventDefault()}
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          className="fixed z-50 min-w-40 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl shadow-black/50 py-1 flex flex-col"
         >
           {children}
         </div>
@@ -112,13 +87,13 @@ export function useContextMenu<T>(id: string) {
     [contextMenu, id],
   );
 
-  // Only return contextMenu data if it belongs to this component, with proper typing
   const activeContextMenu =
     contextMenu?.id === id
       ? { ...contextMenu, data: contextMenu.data as T }
       : null;
 
   return {
+    closeContextMenu,
     handleRightClick,
     contextMenu: activeContextMenu as {
       x: number;

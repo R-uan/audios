@@ -6,9 +6,13 @@ import { useAudioContext } from "./AudioContext";
 interface QueueContextType {
   queue: IAudio[];
   queuePointer: number;
-  increasePointer: () => void;
-  decreasePointer: () => void;
+
+  playNext: () => void;
+  clearQueue: () => void;
+  playPrevious: () => void;
+  toggleRepeat: () => void;
   playNow: (audio: IAudio) => void;
+
   queuePlaylist: (playlist: IPlaylist) => void;
   queueAudio: (audio: IAudio | IAudio[]) => void;
 }
@@ -21,6 +25,14 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
   const [queuePointer, setPointer] = useState(-1);
   const [queue, setQueue] = useState<IAudio[]>([]);
 
+  function toggleRepeat() {
+    setRepeat(!repeat);
+  }
+
+  function clearQueue() {
+    setQueue([]);
+  }
+
   function playNow(audio: IAudio) {
     if (queue.length == 0) {
       setQueue([audio]);
@@ -32,7 +44,7 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
         ...queue.slice(queuePointer + 1),
       ];
       setQueue(newQueue);
-      setTimeout(() => increasePointer(), 100);
+      setTimeout(() => playNext(), 100);
     }
   }
 
@@ -49,7 +61,7 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     queueAudio(audios);
   }
 
-  function increasePointer() {
+  function playNext() {
     if (queuePointer == queue.length - 1) {
       if (repeat) setPointer(0);
       return;
@@ -57,7 +69,7 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     setPointer(queuePointer + 1);
   }
 
-  function decreasePointer() {
+  function playPrevious() {
     if (queuePointer == 0) return;
     setPointer(queuePointer - 1);
   }
@@ -66,12 +78,14 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     <QueueContext.Provider
       value={{
         queue,
+        toggleRepeat,
+        clearQueue,
         queuePlaylist,
         queueAudio,
         queuePointer,
         playNow,
-        increasePointer,
-        decreasePointer,
+        playNext,
+        playPrevious,
       }}
     >
       {children}

@@ -30,10 +30,9 @@ export function AudioContextProvider({ children }: { children: ReactNode }) {
         if (!response.ok) {
           console.log("Could not fetch audio data.");
         }
-
-        const audios: IAudio[] = await response.json();
-        console.log(`Fetched ${audios.length} audios.`);
-        setAudios(audios);
+        const data: { data: IAudio[] } = await response.json();
+        console.log(`Fetched ${data.data.length} audios.`);
+        setAudios(data.data);
       } finally {
         setFetching(false);
       }

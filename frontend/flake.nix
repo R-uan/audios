@@ -1,5 +1,5 @@
 {
-  description = "Node.js dev shell";
+  description = "Bun enviroment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -7,26 +7,32 @@
   };
 
   outputs = {
-    self,
-    nixpkgs,
     flake-utils,
+    nixpkgs,
+    ...
   }:
     flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = import nixpkgs {inherit system;};
+      pkgs = nixpkgs.legacyPackages.${system};
     in {
       devShells.default = pkgs.mkShell {
-        buildInputs = [
-          pkgs.bun
-          pkgs.prettier
-          pkgs.nodejs_20
-          pkgs.nodePackages.sass
-          pkgs.typescript-language-server
-          pkgs.vscode-css-languageserver
-          pkgs.nodePackages.vscode-langservers-extracted
+        buildInputs = with pkgs; [
+          bun
+          prettier
+          vscode-css-languageserver
+          nodePackages.vscode-langservers-extracted
+          nodePackages.sass
+          typescript-language-server
         ];
 
+        env = {
+          NPM_CONFIG_CACHE = ".nix-shell/npm";
+          NPM_CONFIG_PREFIX = ".nix-shell/npm-global";
+          PATH = ".nix-shell/npm-global/bin:$PATH";
+        };
+
         shellHook = ''
-          echo "Node $(node -v) ready. Try not to break anything."
+          mkdir -p .nix-shell/{npm,npm-global}
+          echo "Development shell initialized"
         '';
       };
     });

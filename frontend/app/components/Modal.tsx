@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import styles from "./Modal.module.scss";
 
 interface ModalProps {
   isOpen: boolean;
@@ -11,14 +10,15 @@ export const Modal = ({ isOpen, onClose, children }: ModalProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className={styles.overlay}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className={styles.backdrop} onClick={onClose} />
-
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
       {/* Modal */}
-      <div className={styles.modal}>
-        {/* Content */}
-        <div className={styles.content}>{children}</div>
+      <div className="relative z-10 w-full max-w-sm mx-4 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl shadow-black/60 p-6">
+        {children}
       </div>
     </div>
   );

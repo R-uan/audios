@@ -1,5 +1,4 @@
-import { MouseEvent, useCallback, useEffect, useState } from "react";
-import style from "./LeftSection.module.scss";
+import { useState } from "react";
 import { usePlaylistContext } from "../context/PlaylistContext";
 import { IPlaylist } from "../models/IPlaylist";
 import { useContextMenu } from "./ContextMenu";
@@ -15,6 +14,18 @@ export function LeftSection() {
   const queueContext = useQueueContext();
   const [inputValue, setInputValue] = useState("");
   const [isChecked, setIsChecked] = useState(false);
+
+  // Use the custom hook
+  const { handleRightClick, contextMenu, ContextMenu, closeContextMenu } =
+    useContextMenu<IPlaylist>("left_section");
+
+  const playNow = () => {
+    if (contextMenu) {
+      queueContext.clearQueue();
+      queueContext.queuePlaylist(contextMenu?.data);
+    }
+    closeContextMenu();
+  };
 
   const createEmptyPlaylist = async () => {
     const data: { name: string; audios: string[] | null } = {
@@ -38,6 +49,7 @@ export function LeftSection() {
 
     setInputValue("");
     setIsChecked(false);
+    setIsModalOpen(false);
   };
 
   const deletePlaylist = async (playlistId: string) => {
@@ -55,55 +67,78 @@ export function LeftSection() {
       const response: { deleted: string } = await request.json();
       playlistContext.removePlaylist(response.deleted);
     }
+
+    closeContextMenu();
   };
 
-  // Use the custom hook
-  const { handleRightClick, contextMenu, ContextMenu } =
-    useContextMenu<IPlaylist>("left_section");
-
   return (
-    <section className={style.leftSection}>
-      <div>
-        <h1>Library</h1>
+    <section className="flex flex-col w-60 shrink-0 bg-zinc-900 border-r border-zinc-800 overflow-y-auto">
+      {/* Library Header */}
+      <div className="px-4 py-3 h-12 flex items-center border-b border-zinc-800">
+        <h1 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+          Library
+        </h1>
       </div>
-      <nav>
-        <div className={style.section}>
+
+      <nav className="flex flex-col gap-1 p-2">
+        {/* Archive Section */}
+        <div>
           <button
             onClick={() => setAudioLibraryOpen(!audioLibraryOpen)}
-            className={style.menuHeader}
+            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
           >
-            <span className={style.menuTitle}>Archive</span>
-            <span
-              className={`${style.arrow} ${audioLibraryOpen ? style.arrowOpen : ""}`}
+            <span>Archive</span>
+            <svg
+              className={`w-3 h-3 transition-transform duration-200 ${audioLibraryOpen ? "rotate-90" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              ▶
-            </span>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
           </button>
+
           {audioLibraryOpen && (
-            <ul className={style.mainList}>
-              <li className={style.listItem}>
+            <ul className="mt-0.5 ml-2 border-l border-zinc-800 pl-2 flex flex-col gap-0.5">
+              <li>
                 <button
                   onClick={() => playlistContext.setCurrentPlaylist(null)}
+                  className="w-full text-left px-2 py-1.5 rounded-md text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
                 >
                   All audios
                 </button>
               </li>
-              <li className={style.nestedItem}>
+              <li>
                 <button
                   onClick={() => setTagsOpen(!tagsOpen)}
-                  className={style.nestedButton}
+                  className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
                 >
                   <span>Tags</span>
-                  <span
-                    className={`${style.arrow} ${tagsOpen ? style.arrowOpen : ""}`}
+                  <svg
+                    className={`w-3 h-3 transition-transform duration-200 ${tagsOpen ? "rotate-90" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    ▶
-                  </span>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
                 </button>
                 {tagsOpen && (
-                  <ul className={style.nestedList}>
-                    <li className={style.tagItem}>
-                      <button>Placeholder</button>
+                  <ul className="mt-0.5 ml-2 border-l border-zinc-800 pl-2 flex flex-col gap-0.5">
+                    <li>
+                      <button className="w-full text-left px-2 py-1.5 rounded-md text-sm text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors">
+                        Placeholder
+                      </button>
                     </li>
                   </ul>
                 )}
@@ -111,36 +146,62 @@ export function LeftSection() {
             </ul>
           )}
         </div>
-        {/* Playlist */}
-        <div className={style.section}>
+
+        <div className="my-1 border-t border-zinc-800" />
+
+        {/* Playlists Section */}
+        <div>
           <button
             onClick={() => setPlaylistsOpen(!playlistsOpen)}
-            className={style.menuHeader}
+            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
           >
-            <span className={style.menuTitle}>Playlists</span>
-            <span
-              className={`${style.arrow} ${playlistsOpen ? style.arrowOpen : ""}`}
+            <span>Playlists</span>
+            <svg
+              className={`w-3 h-3 transition-transform duration-200 ${playlistsOpen ? "rotate-90" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              ▶
-            </span>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
           </button>
+
           {playlistsOpen && (
             <>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className={style.create}
+                className="w-full flex items-center gap-1.5 px-2 py-1.5 mt-0.5 rounded-md text-sm text-purple-400 hover:text-purple-300 hover:bg-zinc-800 transition-colors"
               >
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
                 Create Playlist
               </button>
-              <ul className={style.mainList}>
+
+              <ul className="mt-0.5 ml-2 border-l border-zinc-800 pl-2 flex flex-col gap-0.5">
                 {Array.from(playlistContext.playlists).map(([key, value]) => (
                   <li
-                    className={style.listItem}
                     key={key}
                     onContextMenu={(e) => handleRightClick(e, value)}
                   >
                     <button
                       onClick={() => playlistContext.setCurrentPlaylist(key)}
+                      className="w-full text-left px-2 py-1.5 rounded-md text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors truncate"
                     >
                       {value.name}
                     </button>
@@ -150,31 +211,28 @@ export function LeftSection() {
             </>
           )}
 
-          {/* Render the context menu */}
           <ContextMenu>
             <button
-              onClick={() => {
-                // Access the clicked playlist via contextMenu.data
-                console.log("Play now:", contextMenu?.data);
-              }}
+              onClick={() => playNow()}
+              className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
             >
               Play now
             </button>
             <button
               onClick={() => {
-                if (contextMenu) {
-                  queueContext.queuePlaylist(contextMenu.data);
-                }
+                if (contextMenu) queueContext.queuePlaylist(contextMenu.data);
+                closeContextMenu();
               }}
+              className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
             >
               Add to queue
             </button>
-            <hr className="m-4" />
+            <hr className="my-1 border-zinc-700/60" />
             <button
               onClick={() => {
                 if (contextMenu) deletePlaylist(contextMenu.data.id);
               }}
-              className="text-red-400"
+              className="w-full text-left px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-zinc-800 transition-colors"
             >
               Delete Playlist
             </button>
@@ -185,74 +243,42 @@ export function LeftSection() {
       {/* Create Playlist Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="space-y-3">
-          {/* Input Field */}
-          <div>
-            <input
-              id="item-input"
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Enter playlist name..."
-              className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-all"
-              style={{
-                backgroundColor: "#2a2533",
-                borderColor: "#3d3646",
-                color: "#f9e5de",
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#A855F7")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#3d3646")}
-            />
-          </div>
+          <input
+            id="item-input"
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Enter playlist name..."
+            className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+          />
 
-          {/* Checkbox */}
           <div className="flex items-center gap-2">
             <input
               id="agreement-checkbox"
               type="checkbox"
               checked={isChecked}
               onChange={(e) => setIsChecked(e.target.checked)}
-              className="w-5 h-5 rounded cursor-pointer"
-              style={{
-                accentColor: "#A855F7",
-              }}
+              className="w-4 h-4 rounded accent-purple-500 cursor-pointer"
             />
             <label
               htmlFor="agreement-checkbox"
-              className="text-sm cursor-pointer select-none"
-              style={{ color: "#d1c4be" }}
+              className="text-sm text-zinc-400 cursor-pointer select-none"
             >
               Add queue audios to the playlist
             </label>
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-2">
             <button
               onClick={() => setIsModalOpen(false)}
-              className="flex-1 px-4 py-2 rounded transition-colors"
-              style={{ backgroundColor: "#2a2533", color: "#f9e5de" }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = "#332d3f")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = "#2a2533")
-              }
+              className="flex-1 px-4 py-2 text-sm rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={createEmptyPlaylist}
               disabled={!inputValue}
-              className="flex-1 px-4 py-2 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "#A855F7" }}
-              onMouseEnter={(e) =>
-                !e.currentTarget.disabled &&
-                (e.currentTarget.style.backgroundColor = "#9333ea")
-              }
-              onMouseLeave={(e) =>
-                !e.currentTarget.disabled &&
-                (e.currentTarget.style.backgroundColor = "#A855F7")
-              }
+              className="flex-1 px-4 py-2 text-sm rounded-lg bg-purple-600 text-white hover:bg-purple-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Submit
             </button>
