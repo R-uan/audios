@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePlaylistContext } from "../context/PlaylistContext";
 import { IPlaylist } from "../models/IPlaylist";
 import { useContextMenu } from "./ContextMenu";
@@ -6,6 +6,7 @@ import { useQueueContext } from "../context/QueueContext";
 import { Modal } from "./Modal";
 
 export function LeftSection() {
+  const [tags, setTags] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [audioLibraryOpen, setAudioLibraryOpen] = useState(true);
   const [playlistsOpen, setPlaylistsOpen] = useState(true);
@@ -71,6 +72,24 @@ export function LeftSection() {
     closeContextMenu();
   };
 
+  useEffect(() => {
+    async function fetchTags() {
+      try {
+        const response = await fetch("http://localhost:5123/api/audio/tags");
+        if (!response.ok) {
+          console.log("Could not fetch audio data");
+          return;
+        }
+        const result: string[] = await response.json();
+        setTags(result);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+
+    fetchTags();
+  }, []);
+
   return (
     <section className="flex flex-col w-60 shrink-0 bg-zinc-900 border-r border-zinc-800 overflow-y-auto">
       {/* Library Header */}
@@ -135,11 +154,15 @@ export function LeftSection() {
                 </button>
                 {tagsOpen && (
                   <ul className="mt-0.5 ml-2 border-l border-zinc-800 pl-2 flex flex-col gap-0.5">
-                    <li>
-                      <button className="w-full text-left px-2 py-1.5 rounded-md text-sm text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors">
-                        Placeholder
-                      </button>
-                    </li>
+                    {tags.map((t) => {
+                      return (
+                        <li>
+                          <button className="w-full text-left px-2 py-1.5 rounded-md text-sm text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors">
+                            {t}
+                          </button>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </li>

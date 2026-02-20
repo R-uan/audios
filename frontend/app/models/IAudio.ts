@@ -4,5 +4,24 @@ export interface IAudio {
   artist: string;
   link: string;
   source: string;
-  duration: number; // seconds
+  metadata: {
+    releaseYear: number | null;
+    genrer: string | null;
+    duration: number | null;
+    mood: string | null;
+    tags: string[];
+  };
+}
+
+export interface IUpdateAudio {
+  title: string;
+  artist: string;
+  link: string;
+  source: string;
+  releaseYear: number | null;
+  genrer: string | null;
+  duration: number | null;
+  mood: string | null;
+  addTags: string[];
+  removeTags: string[];
 }

@@ -1,16 +1,19 @@
 import { useAudioContext } from "../context/AudioContext";
-import { QueueContextProvider, useQueueContext } from "../context/QueueContext";
-import { IAudio } from "../models/IAudio";
+import { useQueueContext } from "../context/QueueContext";
+import { IAudio, IUpdateAudio } from "../models/IAudio";
 import { AudioWrapper } from "./AudioWrapper";
 import { usePlaylistContext } from "../context/PlaylistContext";
 import { useContextMenu } from "./ContextMenu";
-import { usePlayerContext } from "../context/PlayerContext";
+import { EditAudioModal } from "./EditAudioModal";
+import { useState } from "react";
+import { AudioRequest } from "../shared/AudioRequests";
 
 export function AudioCatalog() {
   const audioContext = useAudioContext();
   const queueContext = useQueueContext();
   const playlistContext = usePlaylistContext();
-  const playerContext = usePlayerContext();
+
+  const [editingAudio, setEditingAudio] = useState<IAudio | null>(null);
 
   const { handleRightClick, contextMenu, ContextMenu, closeContextMenu } =
     useContextMenu<IAudio>("audio_catalog");
@@ -25,8 +28,30 @@ export function AudioCatalog() {
     closeContextMenu();
   };
 
-  const currentPlaylist = playlistContext.currentPlaylist;
+  const handleEdit = () => {
+    if (contextMenu?.data) setEditingAudio(contextMenu.data);
+    closeContextMenu();
+  };
 
+  const handleSave = async (audio: IAudio, add: string[], remove: string[]) => {
+    const update: IUpdateAudio = {
+      title: audio.title,
+      duration: audio.metadata.duration,
+      artist: audio.artist,
+      genrer: audio.metadata.genrer,
+      link: audio.link,
+      mood: audio.metadata.mood,
+      releaseYear: audio.metadata.releaseYear,
+      source: audio.source,
+      addTags: add,
+      removeTags: remove,
+    };
+
+    await AudioRequest.UpdateAudio(audio.id, update);
+    setEditingAudio(null);
+  };
+
+  const currentPlaylist = playlistContext.currentPlaylist;
   const audiosToRender =
     currentPlaylist == null
       ? audioContext.audios
@@ -85,8 +110,24 @@ export function AudioCatalog() {
           >
             Add to queue
           </button>
+          <hr className="my-1 border-zinc-700/60" />
+          <button
+            onClick={handleEdit}
+            className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          >
+            Edit
+          </button>
         </ContextMenu>
       </div>
+
+      {/* Edit Modal */}
+      {editingAudio !== null && (
+        <EditAudioModal
+          audio={editingAudio}
+          onClose={() => setEditingAudio(null)}
+          onSave={handleSave}
+        />
+      )}
     </div>
   );
 }

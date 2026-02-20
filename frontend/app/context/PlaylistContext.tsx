@@ -20,9 +20,9 @@ const PlaylistContext = createContext<PlaylistContextType | undefined>(
 );
 
 export function PlaylistContextProvider({ children }: { children: ReactNode }) {
-  const [playlists, setPlaylists] = useState<Map<string, IPlaylist>>(new Map());
-  const [currentPlaylist, setCurrent] = useState<IPlaylist | null>(null);
   const [fetching, setFetching] = useState(false);
+  const [currentPlaylist, setCurrent] = useState<IPlaylist | null>(null);
+  const [playlists, setPlaylists] = useState<Map<string, IPlaylist>>(new Map());
 
   const addPlaylist = (playlist: IPlaylist) => {
     const newMap = playlists;

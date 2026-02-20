@@ -13,9 +13,10 @@ export const AudioWrapper = memo(
       <li
         key={audio.id}
         onContextMenu={(e) => onContextMenuHandler(e, audio)}
-        className="group flex items-center justify-between px-3 py-2 rounded-lg hover:bg-zinc-800 transition-colors cursor-default"
+        className="group flex items-center gap-4 px-3 py-2 rounded-md hover:bg-zinc-800 transition-colors cursor-default"
       >
-        <div className="flex flex-col min-w-0 flex-1">
+        {/* Title + Artist */}
+        <div className="flex flex-col min-w-0 w-64 shrink-0">
           <span className="text-sm text-zinc-200 group-hover:text-zinc-100 truncate leading-snug transition-colors">
             {audio.title.length <= 40
               ? audio.title
@@ -25,8 +26,22 @@ export const AudioWrapper = memo(
             {audio.artist}
           </span>
         </div>
-        <span className="text-xs tabular-nums text-zinc-600 group-hover:text-zinc-400 shrink-0 ml-4 transition-colors">
-          {audio.duration ?? "??:??"}
+
+        {/* Tags */}
+        <div className="flex flex-1 flex-wrap gap-1.5 min-w-0">
+          {audio.metadata.tags.map((t) => (
+            <span
+              key={t}
+              className="px-1.5 py-0.5 text-xs text-zinc-400 bg-zinc-800 group-hover:bg-zinc-700 border border-zinc-700 rounded transition-colors"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+
+        {/* Duration */}
+        <span className="text-xs tabular-nums text-zinc-500 group-hover:text-zinc-400 shrink-0 transition-colors">
+          {audio.metadata.duration ?? "??:??"}
         </span>
       </li>
     );
