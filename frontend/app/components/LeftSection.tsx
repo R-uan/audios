@@ -4,6 +4,7 @@ import { IPlaylist } from "../models/IPlaylist";
 import { useContextMenu } from "./ContextMenu";
 import { useQueueContext } from "../context/QueueContext";
 import { Modal } from "./Modal";
+import { AudioFilter } from "./AudioFilter";
 
 export function LeftSection() {
   const [tags, setTags] = useState<string[]>([]);
@@ -15,7 +16,7 @@ export function LeftSection() {
   const queueContext = useQueueContext();
   const [inputValue, setInputValue] = useState("");
   const [isChecked, setIsChecked] = useState(false);
-
+  const [filtersOpen, setFiltersOpen] = useState(false);
   // Use the custom hook
   const { handleRightClick, contextMenu, ContextMenu, closeContextMenu } =
     useContextMenu<IPlaylist>("left_section");
@@ -260,6 +261,34 @@ export function LeftSection() {
               Delete Playlist
             </button>
           </ContextMenu>
+        </div>
+        <div className="my-1 border-t border-zinc-800" />
+
+        <div>
+          <button
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          >
+            <span>Filters</span>
+            <svg
+              className={`w-3 h-3 transition-transform duration-200 ${filtersOpen ? "rotate-90" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+          {filtersOpen && (
+            <div className="mt-1 px-1">
+              <AudioFilter />
+            </div>
+          )}
         </div>
       </nav>
 

@@ -29,29 +29,41 @@ export function EditAudioModal({ audio, onClose, onSave }: EditAudioFormProps) {
       metadata: { ...prev.metadata, [key]: value },
     }));
 
-  const addTag = () => {
+  const handleAddTag = () => {
     const tag = tagInput.trim();
+
     if (!tag || form.metadata.tags.includes(tag)) return;
+
     setMeta("tags", [...form.metadata.tags, tag]);
-    setAddTags([...addTags, tag]);
+
+    if (removeTags.includes(tag)) handleRemoveTag(tag);
+    else setAddTags([...addTags, tag]);
+
     setTagInput("");
   };
 
-  const removeTag = (tag: string) => {
+  const handleRemoveTag = (tag: string) => {
     setMeta(
       "tags",
       form.metadata.tags.filter((t) => t !== tag),
     );
+
+    if (addTags.includes(tag)) {
+      setTagInput(tag);
+      handleAddTag();
+      return;
+    }
+
     setRemovedTags([...removeTags, tag]);
   };
 
   const handleTagKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      addTag();
+      handleAddTag();
     }
     if (e.key === "Backspace" && !tagInput && form.metadata.tags.length > 0)
-      removeTag(form.metadata.tags[form.metadata.tags.length - 1]);
+      handleRemoveTag(form.metadata.tags[form.metadata.tags.length - 1]);
   };
 
   return (
@@ -180,7 +192,7 @@ export function EditAudioModal({ audio, onClose, onSave }: EditAudioFormProps) {
                 >
                   {tag}
                   <button
-                    onClick={() => removeTag(tag)}
+                    onClick={() => handleRemoveTag(tag)}
                     className="text-zinc-500 hover:text-red-400 transition-colors"
                   >
                     <svg

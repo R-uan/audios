@@ -5,8 +5,9 @@ import { AudioWrapper } from "./AudioWrapper";
 import { usePlaylistContext } from "../context/PlaylistContext";
 import { useContextMenu } from "./ContextMenu";
 import { EditAudioModal } from "./EditAudioModal";
-import { useState } from "react";
+import { createContext, useMemo, useState } from "react";
 import { AudioRequest } from "../shared/AudioRequests";
+import { useFilters } from "../context/AudioFilterContext";
 
 export function AudioCatalog() {
   const audioContext = useAudioContext();
@@ -22,18 +23,60 @@ export function AudioCatalog() {
     if (contextMenu?.data) queueContext.queueAudio(contextMenu.data);
     closeContextMenu();
   };
+  const { filters } = useFilters();
 
-  const handlePlayNow = () => {
+  const currentPlaylist = playlistContext.currentPlaylist;
+  const audiosToRender = useMemo(() => {
+    let list =
+      currentPlaylist == null
+        ? audioContext.audios
+        : currentPlaylist.audios != null
+          ? (currentPlaylist.audios
+              .map((id) => audioContext.audios.find((a) => a.id === id))
+              .filter(Boolean) as IAudio[])
+          : null;
+
+    if (!list) return null;
+
+    return list.filter((a) => {
+      if (
+        filters.name &&
+        !a.title.toLowerCase().includes(filters.name.toLowerCase())
+      )
+        return false;
+      if (
+        filters.artist &&
+        !a.artist.toLowerCase().includes(filters.artist.toLowerCase())
+      )
+        return false;
+      if (
+        filters.includeTags.length > 0 &&
+        !filters.includeTags.every((t) => a.metadata.tags.includes(t))
+      )
+        return false;
+      if (
+        filters.excludeTags.length > 0 &&
+        filters.excludeTags.some((t) => a.metadata.tags.includes(t))
+      )
+        return false;
+      return true;
+    });
+  }, [audioContext.audios, currentPlaylist, filters]);
+  const handlePlayAudio = () => {
     if (contextMenu?.data) queueContext.playNow(contextMenu.data);
     closeContextMenu();
   };
 
-  const handleEdit = () => {
+  const handleEditAudio = () => {
     if (contextMenu?.data) setEditingAudio(contextMenu.data);
     closeContextMenu();
   };
 
-  const handleSave = async (audio: IAudio, add: string[], remove: string[]) => {
+  const handleUpdateAudio = async (
+    audio: IAudio,
+    add: string[],
+    remove: string[],
+  ) => {
     const update: IUpdateAudio = {
       title: audio.title,
       duration: audio.metadata.duration,
@@ -47,19 +90,18 @@ export function AudioCatalog() {
       removeTags: remove,
     };
 
-    await AudioRequest.UpdateAudio(audio.id, update);
+    const newAudio = await AudioRequest.UpdateAudio(audio.id, update);
+    if (newAudio != null) audioContext.updateAudio(newAudio);
     setEditingAudio(null);
   };
 
-  const currentPlaylist = playlistContext.currentPlaylist;
-  const audiosToRender =
-    currentPlaylist == null
-      ? audioContext.audios
-      : currentPlaylist.audios != null
-        ? (currentPlaylist.audios
-            .map((id) => audioContext.audios.find((a) => a.id === id))
-            .filter(Boolean) as IAudio[])
-        : null;
+  const handleDeleteAudio = async () => {
+    if (contextMenu != null) {
+      if (await AudioRequest.DeleteAudio(contextMenu.data.id))
+        audioContext.deleteAudio(contextMenu.data.id);
+    }
+    closeContextMenu();
+  };
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden bg-zinc-950">
@@ -99,7 +141,7 @@ export function AudioCatalog() {
 
         <ContextMenu>
           <button
-            onClick={handlePlayNow}
+            onClick={handlePlayAudio}
             className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
           >
             Play now
@@ -111,11 +153,27 @@ export function AudioCatalog() {
             Add to queue
           </button>
           <hr className="my-1 border-zinc-700/60" />
+          <a
+            href={contextMenu?.data.link}
+            onClick={closeContextMenu}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          >
+            Open Link
+          </a>
+
           <button
-            onClick={handleEdit}
+            onClick={handleEditAudio}
             className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
           >
             Edit
+          </button>
+          <button
+            onClick={handleDeleteAudio}
+            className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          >
+            Delete
           </button>
         </ContextMenu>
       </div>
@@ -125,7 +183,7 @@ export function AudioCatalog() {
         <EditAudioModal
           audio={editingAudio}
           onClose={() => setEditingAudio(null)}
-          onSave={handleSave}
+          onSave={handleUpdateAudio}
         />
       )}
     </div>

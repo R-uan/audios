@@ -9,39 +9,42 @@ import { ContextMenuProvider } from "./components/ContextMenu";
 import { AudioControls } from "./components/QueueControls";
 import { PlayerProvider } from "./context/PlayerContext";
 import { Header } from "./components/Header";
+import { FilterProvider } from "./context/AudioFilterContext";
 
 export default function Home() {
   return (
-    <ContextMenuProvider>
-      <PlaylistContextProvider>
-        <AudioContextProvider>
-          <PlayerProvider>
-            <QueueContextProvider>
-              <div className="h-screen w-screen bg-zinc-950 text-zinc-100 overflow-hidden flex flex-col">
-                <main className="flex flex-col h-full">
-                  {/* Top bar */}
-                  <Header />
+    <FilterProvider>
+      <ContextMenuProvider>
+        <PlaylistContextProvider>
+          <AudioContextProvider>
+            <PlayerProvider>
+              <QueueContextProvider>
+                <div className="h-screen w-screen bg-zinc-950 text-zinc-100 overflow-hidden flex flex-col">
+                  <main className="flex flex-col h-full">
+                    {/* Top bar */}
+                    <Header />
 
-                  {/* Main content — three columns */}
-                  <div className="flex flex-1 overflow-hidden">
-                    {/* Left — Playlists */}
-                    <LeftSection />
+                    {/* Main content — three columns */}
+                    <div className="flex flex-1 overflow-hidden">
+                      {/* Left — Playlists */}
+                      <LeftSection />
 
-                    {/* Center — Audio catalog */}
-                    <AudioCatalog />
+                      {/* Center — Audio catalog */}
+                      <AudioCatalog />
 
-                    {/* Right — Queue */}
-                    <RightSection />
-                  </div>
+                      {/* Right — Queue */}
+                      <RightSection />
+                    </div>
 
-                  {/* Bottom — Player controls */}
-                  <AudioControls />
-                </main>
-              </div>
-            </QueueContextProvider>
-          </PlayerProvider>
-        </AudioContextProvider>
-      </PlaylistContextProvider>
-    </ContextMenuProvider>
+                    {/* Bottom — Player controls */}
+                    <AudioControls />
+                  </main>
+                </div>
+              </QueueContextProvider>
+            </PlayerProvider>
+          </AudioContextProvider>
+        </PlaylistContextProvider>
+      </ContextMenuProvider>
+    </FilterProvider>
   );
 }

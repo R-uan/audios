@@ -3,7 +3,6 @@ import {
   ReactNode,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 import { IAudio } from "../models/IAudio";
@@ -12,6 +11,8 @@ interface AudioContextType {
   fetching: boolean;
   audios: IAudio[];
   addAudio: (audio: IAudio) => void;
+  deleteAudio: (id: string) => void;
+  updateAudio: (audio: IAudio) => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -19,6 +20,14 @@ const AudioContext = createContext<AudioContextType | undefined>(undefined);
 export function AudioContextProvider({ children }: { children: ReactNode }) {
   const [fetching, setFetching] = useState(false);
   const [audios, setAudios] = useState<IAudio[]>([]);
+
+  const updateAudio = (updated: IAudio) => {
+    setAudios((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+  };
+
+  const deleteAudio = (id: string) => {
+    setAudios((prev) => prev.filter((a) => a.id != id));
+  };
 
   const addAudio = (audio: IAudio) => {};
 
@@ -41,7 +50,15 @@ export function AudioContextProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AudioContext.Provider value={{ audios, addAudio, fetching }}>
+    <AudioContext.Provider
+      value={{
+        audios,
+        deleteAudio,
+        addAudio,
+        updateAudio,
+        fetching,
+      }}
+    >
       {children}
     </AudioContext.Provider>
   );

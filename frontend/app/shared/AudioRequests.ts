@@ -8,7 +8,6 @@ export class AudioRequest {
   public static async OneFull(id: string) {}
 
   public static async UpdateAudio(id: string, body: IUpdateAudio) {
-    console.log(body);
     const request = await fetch(`http://localhost:5123/api/audio/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
@@ -17,7 +16,15 @@ export class AudioRequest {
       },
     });
 
-    const response = await request.json();
-    console.log(response);
+    if (request.ok) return await request.json();
+    return null;
+  }
+
+  public static async DeleteAudio(id: string) {
+    const request = await fetch(`http://localhost:5123/api/audio/${id}`, {
+      method: "DELETE",
+    });
+    if (request.ok) return true;
+    return false;
   }
 }
