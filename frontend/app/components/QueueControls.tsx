@@ -34,8 +34,12 @@ export function AudioControls() {
   }, [audioPlayer, currentPlaying]);
 
   function updateDuration(audioDurationSeconds: number) {
-    if (currentPlaying && currentPlaying.duration !== audioDurationSeconds) {
-      AudioRequest.UpdateDuration(currentPlaying.id, audioDurationSeconds);
+    if (
+      currentPlaying &&
+      currentPlaying.metadata.duration !== audioDurationSeconds
+    ) {
+      // AudioRequest.UpdateDuration(currentPlaying.id, audioDurationSeconds);
+      console.log(audioDurationSeconds);
     }
 
     const formattedDuration =

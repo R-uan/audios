@@ -27,4 +27,6 @@ export class AudioRequest {
     if (request.ok) return true;
     return false;
   }
+
+  public static async UpdateDuration(id: string, duration: number) {}
 }

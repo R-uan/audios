@@ -32,6 +32,7 @@ export function RightSection() {
           </button>
           {/* Clear */}
           <button
+            onClick={queueContext.clearQueue}
             className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition-colors"
             title="Clear queue"
           >
