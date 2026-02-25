@@ -1,12 +1,18 @@
+import { IAudio } from "@/app/models/IAudio";
+import { Modal } from "@/app/components/Modal";
 import { ReactNode, useEffect, useState } from "react";
-import { IAudio } from "../models/IAudio";
-import { Modal } from "./Modal";
-interface EditAudioFormProps {
+
+interface UpdateAudioFormProps {
   audio: IAudio;
   onClose: () => void;
   onSave: (updated: IAudio, add: string[], remove: string[]) => void;
 }
-export function EditAudioModal({ audio, onClose, onSave }: EditAudioFormProps) {
+
+export function UpdateAudioForm({
+  audio,
+  onClose,
+  onSave,
+}: UpdateAudioFormProps) {
   const [form, setForm] = useState<IAudio>(audio);
   const [tagInput, setTagInput] = useState("");
   const [addTags, setAddTags] = useState<string[]>([]);

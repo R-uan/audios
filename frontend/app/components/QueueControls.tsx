@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { usePlayerContext } from "../context/PlayerContext";
 import { IAudio } from "../models/IAudio";
 import { useQueueContext } from "../context/QueueContext";
-import { AudioRequest } from "../shared/AudioRequests";
 
 export function AudioControls() {
   const queueContext = useQueueContext();

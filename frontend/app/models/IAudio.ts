@@ -13,6 +13,19 @@ export interface IAudio {
   };
 }
 
+export interface IPostAudio {
+  title: string;
+  artist: string;
+  link: string;
+  source: string;
+  local: boolean;
+  releaseYear: number | null;
+  genrer: string | null;
+  duration: number | null;
+  mood: string | null;
+  tags: string[];
+}
+
 export interface IUpdateAudio {
   title: string;
   artist: string;

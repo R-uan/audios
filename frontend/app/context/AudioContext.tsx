@@ -29,7 +29,9 @@ export function AudioContextProvider({ children }: { children: ReactNode }) {
     setAudios((prev) => prev.filter((a) => a.id != id));
   };
 
-  const addAudio = (audio: IAudio) => {};
+  const addAudio = (audio: IAudio) => {
+    setAudios([...audios, audio]);
+  };
 
   useEffect(() => {
     async function fetchData() {
