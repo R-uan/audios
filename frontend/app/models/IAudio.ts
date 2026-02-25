@@ -4,6 +4,7 @@ export interface IAudio {
   artist: string;
   link: string;
   source: string;
+  addedAt: string;
   metadata: {
     releaseYear: number | null;
     genrer: string | null;

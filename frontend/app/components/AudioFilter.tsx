@@ -1,9 +1,6 @@
 import { useState } from "react";
-import {
-  AudioFilters,
-  defaultFilters,
-  useFilters,
-} from "../context/AudioFilterContext";
+import { useFilters } from "../context/AudioFilterContext";
+import { AudioFilters, defaultFilters } from "../context/AudioFilterContext";
 
 export function AudioFilter() {
   const { filters, setFilters } = useFilters();
@@ -49,11 +46,12 @@ export function AudioFilter() {
     filters.name ||
     filters.artist ||
     filters.includeTags.length > 0 ||
-    filters.excludeTags.length > 0;
+    filters.excludeTags.length > 0 ||
+    filters.daysAgo !== null;
 
   return (
     <div className="space-y-2">
-      {/* Name */}
+      {/* Title */}
       <input
         value={filters.name}
         onChange={(e) => set("name", e.target.value)}
@@ -68,6 +66,57 @@ export function AudioFilter() {
         placeholder="Artist..."
         className="w-full px-2 py-1.5 text-xs rounded-md bg-zinc-800 border border-zinc-700 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent transition-all"
       />
+
+      {/* Added within */}
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-medium text-zinc-500">
+            Added within
+          </span>
+          {filters.daysAgo !== null ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs tabular-nums text-purple-400">
+                {filters.daysAgo === 0 ? "today" : `${filters.daysAgo}d`}
+              </span>
+              <button
+                onClick={() => set("daysAgo", null)}
+                className="text-zinc-600 hover:text-zinc-300 transition-colors"
+              >
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <span className="text-xs text-zinc-600">off</span>
+          )}
+        </div>
+
+        <input
+          type="range"
+          min={0}
+          max={365}
+          step={1}
+          value={filters.daysAgo ?? 365}
+          onChange={(e) => set("daysAgo", parseInt(e.target.value))}
+          className="w-full h-1 appearance-none rounded-full bg-zinc-700 accent-purple-500 cursor-pointer"
+        />
+
+        <div className="flex justify-between mt-1">
+          <span className="text-xs text-zinc-600">today</span>
+          <span className="text-xs text-zinc-600">365d</span>
+        </div>
+      </div>
 
       {/* Include tags */}
       <TagTokenInput

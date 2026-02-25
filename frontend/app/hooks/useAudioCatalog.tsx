@@ -32,6 +32,13 @@ export function useAudioCatalog() {
 
     if (!list) return null;
 
+    const cutoff =
+      filters.daysAgo !== null
+        ? filters.daysAgo === 0
+          ? new Date(new Date().setHours(0, 0, 0, 0))
+          : new Date(Date.now() - filters.daysAgo * 86_400_000)
+        : null;
+
     return list.filter((a) => {
       if (
         filters.name &&
@@ -53,30 +60,31 @@ export function useAudioCatalog() {
         filters.excludeTags.some((t) => a.metadata.tags.includes(t))
       )
         return false;
+      if (cutoff && new Date(a.addedAt) < cutoff) return false;
       return true;
     });
   }, [audioContext.audios, currentPlaylist, filters]);
 
-  const handlePlayAudio = () => {
+  function handlePlayAudio() {
     if (contextMenu?.data) queueContext.playNow(contextMenu.data);
     closeContextMenu();
-  };
+  }
 
-  const handleQueueAudio = () => {
+  function handleQueueAudio() {
     if (contextMenu?.data) queueContext.queueAudio(contextMenu.data);
     closeContextMenu();
-  };
+  }
 
-  const handleEditAudio = () => {
+  function handleEditAudio() {
     if (contextMenu?.data) setEditingAudio(contextMenu.data);
     closeContextMenu();
-  };
+  }
 
-  const handleUpdateAudio = async (
+  async function handleUpdateAudio(
     audio: IAudio,
     add: string[],
     remove: string[],
-  ) => {
+  ) {
     const update: IUpdateAudio = {
       title: audio.title,
       duration: audio.metadata.duration,
@@ -93,20 +101,20 @@ export function useAudioCatalog() {
     const newAudio = await AudioRequest.UpdateAudio(audio.id, update);
     if (newAudio != null) audioContext.updateAudio(newAudio);
     setEditingAudio(null);
-  };
+  }
 
-  const handleDeleteAudio = async () => {
+  async function handleDeleteAudio() {
     if (contextMenu != null) {
       if (await AudioRequest.DeleteAudio(contextMenu.data.id))
         audioContext.deleteAudio(contextMenu.data.id);
     }
     closeContextMenu();
-  };
+  }
 
-  const queueRenderedAudios = () => {
+  function queueRenderedAudios() {
     if (audiosToRender != null && audiosToRender.length > 0)
       queueContext.queueAudio(audiosToRender);
-  };
+  }
 
   // useAudioCatalog.ts
   return {

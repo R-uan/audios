@@ -5,6 +5,7 @@ export interface AudioFilters {
   artist: string;
   includeTags: string[];
   excludeTags: string[];
+  daysAgo: number | null;
 }
 
 export const defaultFilters: AudioFilters = {
@@ -12,6 +13,7 @@ export const defaultFilters: AudioFilters = {
   artist: "",
   includeTags: [],
   excludeTags: [],
+  daysAgo: null,
 };
 
 const FilterContext = createContext<{
