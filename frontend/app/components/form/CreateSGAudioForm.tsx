@@ -3,6 +3,7 @@ import React, { ReactNode, useState } from "react";
 import { Modal } from "../Modal";
 import { AudioRequest } from "@/app/shared/AudioRequests";
 import { useAudioContext } from "@/app/context/AudioContext";
+import { getAudioDuration } from "@/app/helpers/getAudioDuration";
 
 interface SGForm {
   link: string;
@@ -64,7 +65,6 @@ export function CreateSGAudioForm() {
 
   async function handleSubmit() {
     if (!isFormValid) return;
-
     const request = await fetch("http://localhost:3000/api/sg", {
       method: "POST",
       body: JSON.stringify({ url: form.link.trim() }),
@@ -73,12 +73,14 @@ export function CreateSGAudioForm() {
 
     if (request.ok) {
       const { title, artist, url, source } = await request.json();
+      const duration = await getAudioDuration(url);
+
       const audio: IPostAudio = {
         title,
         artist,
         source,
         link: url,
-        duration: 0,
+        duration: duration,
         local: false,
         tags: form.tags,
         mood: form.mood,
@@ -94,7 +96,6 @@ export function CreateSGAudioForm() {
       }
     }
   }
-
   return (
     <>
       <button

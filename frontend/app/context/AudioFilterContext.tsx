@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 
 export interface AudioFilters {
   name: string;
@@ -19,12 +19,17 @@ export const defaultFilters: AudioFilters = {
 const FilterContext = createContext<{
   filters: AudioFilters;
   setFilters: React.Dispatch<React.SetStateAction<AudioFilters>>;
+  set: <K extends keyof AudioFilters>(key: K, value: AudioFilters[K]) => void;
 } | null>(null);
 
 export function FilterProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<AudioFilters>(defaultFilters);
+
+  const set = <K extends keyof AudioFilters>(key: K, value: AudioFilters[K]) =>
+    setFilters((prev) => ({ ...prev, [key]: value }));
+
   return (
-    <FilterContext.Provider value={{ filters, setFilters }}>
+    <FilterContext.Provider value={{ filters, setFilters, set }}>
       {children}
     </FilterContext.Provider>
   );

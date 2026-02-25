@@ -3,12 +3,9 @@ import { useFilters } from "../context/AudioFilterContext";
 import { AudioFilters, defaultFilters } from "../context/AudioFilterContext";
 
 export function AudioFilter() {
-  const { filters, setFilters } = useFilters();
+  const { filters, setFilters, set } = useFilters();
   const [includeInput, setIncludeInput] = useState("");
   const [excludeInput, setExcludeInput] = useState("");
-
-  const set = <K extends keyof AudioFilters>(key: K, value: AudioFilters[K]) =>
-    setFilters((prev) => ({ ...prev, [key]: value }));
 
   const addTag = (
     field: "includeTags" | "excludeTags",

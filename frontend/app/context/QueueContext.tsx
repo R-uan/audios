@@ -6,13 +6,13 @@ import { useAudioContext } from "./AudioContext";
 interface QueueContextType {
   queue: IAudio[];
   queuePointer: number;
-
+  shuffleQueue: () => void;
   playNext: () => void;
   clearQueue: () => void;
   playPrevious: () => void;
   toggleRepeat: () => void;
   playNow: (audio: IAudio) => void;
-
+  setQueue: (queue: IAudio[]) => void;
   queuePlaylist: (playlist: IPlaylist) => void;
   queueAudio: (audio: IAudio | IAudio[]) => void;
 }
@@ -27,6 +27,24 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
 
   function toggleRepeat() {
     setRepeat(!repeat);
+  }
+
+  function shuffleQueue() {
+    setQueue((prev) => {
+      if (prev.length <= 1) return prev;
+
+      const currentAudio = prev[queuePointer];
+
+      const remaining = prev.filter((_, idx) => idx !== queuePointer);
+
+      for (let i = remaining.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+      }
+
+      setPointer(0);
+      return [currentAudio, ...remaining];
+    });
   }
 
   function clearQueue() {
@@ -78,8 +96,10 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     <QueueContext.Provider
       value={{
         queue,
+        setQueue, // Add this
         toggleRepeat,
         clearQueue,
+        shuffleQueue,
         queuePlaylist,
         queueAudio,
         queuePointer,

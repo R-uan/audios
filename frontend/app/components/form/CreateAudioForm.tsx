@@ -3,6 +3,7 @@ import React, { ReactNode, useState } from "react";
 import { Modal } from "../Modal";
 import { AudioRequest } from "@/app/shared/AudioRequests";
 import { useAudioContext } from "@/app/context/AudioContext";
+import { getAudioDuration } from "@/app/helpers/getAudioDuration";
 
 interface AddAudioForm {
   title: string;
@@ -77,16 +78,16 @@ export function CreateAudioForm() {
     if (!isValid) return;
 
     const audio: IPostAudio = {
+      tags: form.tags,
+      local: form.local,
+      link: form.link.trim(),
       title: form.title.trim(),
       artist: form.artist.trim(),
-      link: form.link.trim(),
       source: form.source.trim(),
-      local: form.local,
-      releaseYear: form.releaseYear ? parseInt(form.releaseYear) : null,
-      genrer: form.genrer.trim() || null,
       mood: form.mood.trim() || null,
-      duration: null,
-      tags: form.tags,
+      genrer: form.genrer.trim() || null,
+      duration: await getAudioDuration(form.source.trim()),
+      releaseYear: form.releaseYear ? parseInt(form.releaseYear) : null,
     };
 
     const post = await AudioRequest.AddAudio(audio);
