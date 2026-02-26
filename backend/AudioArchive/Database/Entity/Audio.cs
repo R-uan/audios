@@ -1,8 +1,10 @@
 using System.Text.Json.Serialization;
 using AudioArchive.Models;
 
-namespace AudioArchive.Database.Entity {
-  public class Audio {
+namespace AudioArchive.Database.Entity
+{
+  public class Audio
+  {
     public required Guid Id { get; set; } = Guid.NewGuid();
     public required Guid ArtistId { get; set; }
     public required string Title { get; set; }
@@ -14,7 +16,6 @@ namespace AudioArchive.Database.Entity {
 
     public required Artist Artist { get; set; }
     public required DateTime AddedAt { get; set; }
-
 
     [JsonIgnore]
     public List<Playlist>? Playlists { get; set; }
@@ -30,6 +31,7 @@ namespace AudioArchive.Database.Entity {
         Genrer = request.Genrer,
         Mood = request.Mood,
         ReleaseYear = request.ReleaseYear,
+        Tags = []
       };
 
       var audio = new Audio {

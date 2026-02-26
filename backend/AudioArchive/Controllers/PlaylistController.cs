@@ -4,10 +4,12 @@ using AudioArchive.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace AudioArchive.Controllers {
+namespace AudioArchive.Controllers
+{
   [ApiController]
   [Route("api/playlist")]
-  public class PlaylistController(AudioDatabaseContext _database) : ControllerBase {
+  public class PlaylistController(AudioDatabaseContext _database) : ControllerBase
+  {
     [HttpGet]
     public async Task<IActionResult> GetPlaylists() {
       var playlists = await _database.Playlists
@@ -62,7 +64,7 @@ namespace AudioArchive.Controllers {
     }
 
     [HttpDelete("{playlistId}")]
-    public async Task<IActionResult> DeletePlaylis([FromRoute] string playlistId) {
+    public async Task<IActionResult> DeletePlaylist([FromRoute] string playlistId) {
       if (!Guid.TryParse(playlistId, out var playlistGuid)) return base.BadRequest("Invalid id");
       var playlist = await _database.Playlists.FindAsync(playlistGuid);
       if (playlist == null) return base.NotFound("Playlist not found.");

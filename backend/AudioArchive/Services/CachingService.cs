@@ -27,5 +27,10 @@ namespace AudioArchive.Services
 
       return default;
     }
+
+    async Task ICachingService.DeleteCache(string key) {
+      var database = _redis.GetDatabase();
+      await database.StringDeleteAsync(key, ValueCondition.Exists);
+    }
   }
 }

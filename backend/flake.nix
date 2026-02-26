@@ -1,37 +1,32 @@
 {
-  description = ".NET development environment";
+  description = "Audio Archive";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    flake-utils,
-  }:
-    flake-utils.lib.eachDefaultSystem (
-      system: let
-        pkgs = nixpkgs.legacyPackages.${system};
-      in {
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            dotnet-sdk_10
-            netcoredbg # Debugger for .NET Core
-            dotnet-ef
-            roslyn-ls # LSP server for editors
-          ];
+  outputs = {flake-utils, nixpkgs, ... }:
+    flake-utils.lib.eachDefaultSystem (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+    in {
+      devShells.default = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          dotnet-sdk_10
+          netcoredbg
+          dotnet-ef
+          roslyn-ls
+        ];
 
-          env = {
-            DOTNET_ROOT = "${pkgs.dotnet-sdk_10}";
-            PATH = "${pkgs.dotnet-sdk_10}/bin:${pkgs.dotnet-ef}/bin:${pkgs.netcoredbg}/bin:$PATH";
-          };
+        env = {
+        };      
 
-          shellHook = ''
-            echo "🚀 .NET Development Environment"
-          '';
-        };
-      }
-    );
+        shellHook = ''
+          mkdir -p .nix-shell/{dotnet,nuget}
+          export NUGET_PACKAGES="$PWD/.nix-shell/nuget"
+          export DOTNET_CLI_HOME="$PWD/.nix-shell/dotnet"
+          echo "Development shell initialized"
+        '';
+      };
+    });
 }

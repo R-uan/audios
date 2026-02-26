@@ -1,5 +1,7 @@
-namespace AudioArchive.Models {
-  public class PostAudioRequest {
+namespace AudioArchive.Models
+{
+  public class PostAudioRequest
+  {
     public required string Title { get; set; }
     public required string Artist { get; set; }
     public required string Link { get; set; }
@@ -13,7 +15,8 @@ namespace AudioArchive.Models {
     public List<string>? Tags { get; set; }
   }
 
-  public class PatchAudioRequest {
+  public class PatchAudioRequest
+  {
     public string? Title { get; set; }
     public string? Artist { get; set; }
     public string? Link { get; set; }

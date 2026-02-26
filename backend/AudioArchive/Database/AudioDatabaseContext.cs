@@ -1,8 +1,10 @@
 using AudioArchive.Database.Entity;
 using Microsoft.EntityFrameworkCore;
 
-namespace AudioArchive.Database {
-  public class AudioDatabaseContext(DbContextOptions<AudioDatabaseContext> options) : DbContext(options) {
+namespace AudioArchive.Database
+{
+  public class AudioDatabaseContext(DbContextOptions<AudioDatabaseContext> options) : DbContext(options)
+  {
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Audio> Audios { get; set; }
     public DbSet<Artist> Artists { get; set; }
@@ -40,6 +42,7 @@ namespace AudioArchive.Database {
       modelBuilder.Entity<Tag>(tag => {
         tag.ToTable("tags");
         tag.HasKey(t => t.Id);
+        tag.HasIndex(t => t.Name).IsUnique();
       });
 
       modelBuilder.Entity<Playlist>(p => {
