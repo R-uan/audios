@@ -73,17 +73,17 @@ export function CreateSGAudioForm() {
 
     if (request.ok) {
       const { title, artist, url, source } = await request.json();
-      const duration = await getAudioDuration(url);
+      const duration = await getAudioDuration(source);
 
       const audio: IPostAudio = {
         title,
         artist,
         source,
         link: url,
-        duration: duration,
         local: false,
         tags: form.tags,
         mood: form.mood,
+        duration: duration,
         genrer: form.genrer,
         releaseYear: form.releaseYear ? parseInt(form.releaseYear) : null,
       };
@@ -94,6 +94,8 @@ export function CreateSGAudioForm() {
         audioContext.addAudio(post);
         setIsOpen(false);
       }
+
+      setForm(defaultSGForm);
     }
   }
   return (

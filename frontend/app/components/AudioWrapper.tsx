@@ -9,6 +9,12 @@ export const AudioWrapper = memo(
     audio: IAudio;
     onContextMenuHandler: (e: MouseEvent, audio: IAudio) => void;
   }) => {
+    function secondsToMinutes(seconds: number) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+    }
+
     return (
       <li
         key={audio.id}
@@ -41,7 +47,9 @@ export const AudioWrapper = memo(
 
         {/* Duration */}
         <span className="text-xs tabular-nums text-zinc-500 group-hover:text-zinc-400 shrink-0 transition-colors">
-          {audio.metadata.duration ?? "??:??"}
+          {audio.metadata.duration
+            ? secondsToMinutes(audio.metadata.duration)
+            : "??:??"}
         </span>
       </li>
     );
