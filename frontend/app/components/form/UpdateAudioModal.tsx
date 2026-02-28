@@ -37,14 +37,13 @@ export function UpdateAudioForm({
 
   const handleAddTag = () => {
     const tag = tagInput.trim();
-
     if (!tag || form.metadata.tags.includes(tag)) return;
-
     setMeta("tags", [...form.metadata.tags, tag]);
-
-    if (removeTags.includes(tag)) handleRemoveTag(tag);
-    else setAddTags([...addTags, tag]);
-
+    if (removeTags.includes(tag)) {
+      setRemovedTags(removeTags.filter((t) => t !== tag)); // un-mark for removal
+    } else {
+      setAddTags([...addTags, tag]);
+    }
     setTagInput("");
   };
 
@@ -53,14 +52,11 @@ export function UpdateAudioForm({
       "tags",
       form.metadata.tags.filter((t) => t !== tag),
     );
-
     if (addTags.includes(tag)) {
-      setTagInput(tag);
-      handleAddTag();
-      return;
+      setAddTags(addTags.filter((t) => t !== tag)); // undo the addition
+    } else {
+      setRemovedTags([...removeTags, tag]);
     }
-
-    setRemovedTags([...removeTags, tag]);
   };
 
   const handleTagKeyDown = (e: React.KeyboardEvent) => {

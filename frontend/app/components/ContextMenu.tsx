@@ -73,11 +73,25 @@ export function useContextMenu<T>(id: string) {
   const ContextMenuComponent = useCallback(
     ({ children }: { children: ReactNode }) => {
       if (!contextMenu || contextMenu.id !== id) return null;
+
+      const menuWidth = 160;
+      const menuHeight = 200; // approximate
+
+      const x =
+        contextMenu.x + menuWidth > window.innerWidth
+          ? contextMenu.x - menuWidth
+          : contextMenu.x;
+
+      const y =
+        contextMenu.y + menuHeight > window.innerHeight
+          ? contextMenu.y - menuHeight
+          : contextMenu.y;
+
       return (
         <div
           data-context-menu
           onContextMenu={(e) => e.preventDefault()}
-          style={{ top: contextMenu.y, left: contextMenu.x }}
+          style={{ top: y, left: x }}
           className="fixed z-50 min-w-40 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl shadow-black/50 py-1 flex flex-col"
         >
           {children}
