@@ -89,10 +89,16 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
 
   function queueAudio(audio: IAudio | IAudio[]) {
     const first = queue.length == 0;
-    setQueue([...queue, ...(Array.isArray(audio) ? audio : [audio])]);
-    if (first) setPointer(0);
-    console.log("queueing audio");
+    const newItems = Array.isArray(audio) ? audio : [audio];
+
+    const newQueue = [
+      ...queue,
+      ...newItems.filter((item) => !queue.some((q) => q.id === item.id)),
+    ];
+
+    setQueue(newQueue);
     setQueueOnLocalStorage();
+    if (first) setPointer(0);
   }
 
   function queuePlaylist(playlist: IPlaylist) {

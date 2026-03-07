@@ -1,9 +1,63 @@
 import { useQueueContext } from "../context/QueueContext";
 import { useState } from "react";
-
 import { IAudio } from "../models/IAudio";
 import { useContextMenu } from "./ContextMenu";
 import { useFilters } from "../context/AudioFilterContext";
+
+function TitleTooltip({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div
+      className="relative min-w-0 flex-1"
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+    >
+      {children}
+      {visible && (
+        <div className="absolute left-0 bottom-full mb-1.5 z-50 px-2 py-1 text-xs text-zinc-100 bg-zinc-800 border border-zinc-700 rounded shadow-lg shadow-black/40 whitespace-nowrap max-w-xs">
+          {title}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TagsRow({
+  tags,
+  tagClassName,
+}: {
+  tags: string[];
+  tagClassName: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  const tagJoin = tags.join(" · ");
+  return (
+    <div
+      className="relative min-w-0"
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+    >
+      <span className={`block truncate ${tagClassName}`}>
+        {tagJoin.length <= 37 ? tagJoin : `${tagJoin.slice(0, 35)}…`}
+      </span>
+      {visible && (
+        <div className="absolute left-0 bottom-full mb-1.5 z-50 px-2 py-1.5 bg-zinc-800 border border-zinc-700 rounded shadow-lg shadow-black/40 flex flex-wrap gap-1.5 max-w-xs">
+          {tags.map((tag) => (
+            <span key={tag} className={tagClassName}>
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function RightSection() {
   const queueContext = useQueueContext();
@@ -15,7 +69,6 @@ export function RightSection() {
   const { handleRightClick, contextMenu, ContextMenu, closeContextMenu } =
     useContextMenu<IAudio>("right_section");
 
-  // Get current and upcoming songs only (hide previous)
   const currentAndUpcoming = queueContext.queue.slice(
     queueContext.queuePointer,
   );
@@ -37,25 +90,17 @@ export function RightSection() {
 
   function handleDrop(e: React.DragEvent, dropIndex: number) {
     e.preventDefault();
-
     if (draggedIndex === null || draggedIndex === dropIndex) {
       setDraggedIndex(null);
       setDragOverIndex(null);
       return;
     }
-
-    // Calculate actual indices in the full queue
     const actualDraggedIndex = queueContext.queuePointer + 1 + draggedIndex;
     const actualDropIndex = queueContext.queuePointer + 1 + dropIndex;
-
-    // Reorder the queue
     const newQueue = [...queueContext.queue];
     const [removed] = newQueue.splice(actualDraggedIndex, 1);
     newQueue.splice(actualDropIndex, 0, removed);
-
-    // Update the queue in context
     queueContext.setQueue(newQueue);
-
     setDraggedIndex(null);
     setDragOverIndex(null);
   }
@@ -66,40 +111,35 @@ export function RightSection() {
   }
 
   function playNow() {
-    if (contextMenu) {
-      queueContext.playNow(contextMenu.data);
-    }
+    if (contextMenu) queueContext.playNow(contextMenu.data);
     closeContextMenu();
   }
 
   function removeFromQueue() {
     if (contextMenu) {
-      const audioToRemove = contextMenu.data;
-      const newQueue = queueContext.queue.filter(
-        (audio) => audio.id !== audioToRemove.id,
+      queueContext.setQueue(
+        queueContext.queue.filter((a) => a.id !== contextMenu.data.id),
       );
-      queueContext.setQueue(newQueue);
     }
     closeContextMenu();
   }
 
   function seeMoreOfArtist() {
-    if (contextMenu) {
-      const artist = contextMenu.data.artist;
-      set("artist", artist);
-    }
+    if (contextMenu) set("artist", contextMenu.data.artist);
     closeContextMenu();
   }
 
   return (
-    <section className="flex flex-col w-72 shrink-0 bg-zinc-900 border-l border-zinc-800">
+    <section
+      style={{ width: "351px" }}
+      className="flex flex-col overflow-hidden bg-zinc-900 border-l border-zinc-800"
+    >
       {/* Header */}
       <header className="flex h-12 items-center justify-between px-4 py-3 border-b border-zinc-800 shrink-0">
         <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
           Queue
         </h3>
         <div className="flex items-center gap-1">
-          {/* Shuffle */}
           <button
             className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
             onClick={queueContext.shuffleQueue}
@@ -119,7 +159,6 @@ export function RightSection() {
               />
             </svg>
           </button>
-          {/* Clear */}
           <button
             onClick={queueContext.clearQueue}
             className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition-colors"
@@ -170,23 +209,31 @@ export function RightSection() {
                   Now Playing
                 </h4>
                 <div
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700"
+                  className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-zinc-800 border border-zinc-700"
                   onContextMenu={(e) => handleRightClick(e, currentSong)}
                 >
                   <svg
-                    className="w-4 h-4 text-green-500 shrink-0 animate-pulse"
+                    className="w-4 h-4 text-green-500 shrink-0 mt-0.5 animate-pulse"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
                     <path d="M8 5v14l11-7z" />
                   </svg>
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <span className="text-sm font-medium text-zinc-100 truncate leading-snug">
-                      {currentSong.title.length <= 35
-                        ? currentSong.title
-                        : `${currentSong.title.slice(0, 33)}…`}
-                    </span>
-                    <span className="text-xs text-zinc-400 truncate mt-0.5">
+                  <div className="flex flex-col min-w-0 flex-1 gap-0.5">
+                    <TitleTooltip title={currentSong.title}>
+                      <span className="text-sm font-medium text-zinc-100 truncate leading-snug block">
+                        {currentSong.title.length <= 37
+                          ? currentSong.title
+                          : `${currentSong.title.slice(0, 35)}…`}
+                      </span>
+                    </TitleTooltip>
+                    {currentSong.metadata.tags.length > 0 && (
+                      <TagsRow
+                        tags={currentSong.metadata.tags}
+                        tagClassName="text-xs text-zinc-500"
+                      />
+                    )}
+                    <span className="text-xs text-zinc-400 truncate">
                       {currentSong.artist}
                     </span>
                   </div>
@@ -212,28 +259,35 @@ export function RightSection() {
                       onDragEnd={handleDragEnd}
                       onContextMenu={(e) => handleRightClick(e, audio)}
                       className={`
-                        group flex items-center gap-2 px-3 py-2 rounded-lg 
+                        group flex items-start gap-2 px-3 py-2 rounded-lg
                         hover:bg-zinc-800 transition-all cursor-grab active:cursor-grabbing
                         ${draggedIndex === index ? "opacity-40 scale-95" : ""}
                         ${dragOverIndex === index && draggedIndex !== index ? "border-2 border-zinc-600 bg-zinc-800/50" : ""}
                       `}
                     >
-                      {/* Drag Handle */}
                       <svg
-                        className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 shrink-0 transition-colors"
+                        className="w-3.5 h-3.5 text-zinc-600 group-hover:text-zinc-400 shrink-0 mt-0.5 transition-colors"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                       >
                         <path d="M9 3h2v2H9V3zm0 4h2v2H9V7zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm0 4h2v2H9v-2zm4-16h2v2h-2V3zm0 4h2v2h-2V7zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z" />
                       </svg>
 
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="text-sm text-zinc-200 truncate leading-snug">
-                          {audio.title.length <= 37
-                            ? audio.title
-                            : `${audio.title.slice(0, 35)}…`}
-                        </span>
-                        <span className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors truncate mt-0.5">
+                      <div className="flex flex-col min-w-0 flex-1 gap-0.5">
+                        <TitleTooltip title={audio.title}>
+                          <span className="text-sm text-zinc-200 truncate leading-snug block">
+                            {audio.title.length <= 37
+                              ? audio.title
+                              : `${audio.title.slice(0, 35)}…`}
+                          </span>
+                        </TitleTooltip>
+                        {audio.metadata.tags.length > 0 && (
+                          <TagsRow
+                            tags={audio.metadata.tags}
+                            tagClassName="text-xs text-zinc-600 group-hover:text-zinc-500 transition-colors"
+                          />
+                        )}
+                        <span className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors truncate">
                           {audio.artist}
                         </span>
                       </div>
