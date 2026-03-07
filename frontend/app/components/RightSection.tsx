@@ -28,13 +28,7 @@ function TitleTooltip({
   );
 }
 
-function TagsRow({
-  tags,
-  tagClassName,
-}: {
-  tags: string[];
-  tagClassName: string;
-}) {
+function TagsRow({ tags }: { tags: string[] }) {
   const [visible, setVisible] = useState(false);
   const tagJoin = tags.join(" · ");
   return (
@@ -43,13 +37,13 @@ function TagsRow({
       onMouseEnter={() => setVisible(true)}
       onMouseLeave={() => setVisible(false)}
     >
-      <span className={`block truncate ${tagClassName}`}>
+      <span className={`block truncate text-xs `}>
         {tagJoin.length <= 37 ? tagJoin : `${tagJoin.slice(0, 35)}…`}
       </span>
       {visible && (
-        <div className="absolute left-0 bottom-full mb-1.5 z-50 px-2 py-1.5 bg-zinc-800 border border-zinc-700 rounded shadow-lg shadow-black/40 flex flex-wrap gap-1.5 max-w-xs">
+        <div className="absolute left-0 bottom-full mb-1.5 z-50 px-2 text-xs py-1.5 text-zinc-100 bg-zinc-800 border border-zinc-700 rounded shadow-lg shadow-black/40 flex flex-wrap gap-1.5 max-w-xs">
           {tags.map((tag) => (
-            <span key={tag} className={tagClassName}>
+            <span key={tag} className="text-zinc-100">
               {tag}
             </span>
           ))}
@@ -228,10 +222,7 @@ export function RightSection() {
                       </span>
                     </TitleTooltip>
                     {currentSong.metadata.tags.length > 0 && (
-                      <TagsRow
-                        tags={currentSong.metadata.tags}
-                        tagClassName="text-xs text-zinc-500"
-                      />
+                      <TagsRow tags={currentSong.metadata.tags} />
                     )}
                     <span className="text-xs text-zinc-400 truncate">
                       {currentSong.artist}
@@ -282,10 +273,7 @@ export function RightSection() {
                           </span>
                         </TitleTooltip>
                         {audio.metadata.tags.length > 0 && (
-                          <TagsRow
-                            tags={audio.metadata.tags}
-                            tagClassName="text-xs text-zinc-600 group-hover:text-zinc-500 transition-colors"
-                          />
+                          <TagsRow tags={audio.metadata.tags} />
                         )}
                         <span className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors truncate">
                           {audio.artist}
