@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { IAudio } from "../models/IAudio";
+import { AudioRequest } from "../shared/AudioRequests";
 
 interface AudioContextType {
   fetching: boolean;
@@ -34,21 +35,14 @@ export function AudioContextProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        setFetching(true);
-        const response = await fetch("http://localhost:5123/api/audio");
-        if (!response.ok) {
-          console.log("Could not fetch audio data.");
-        }
-        const data: { data: IAudio[] } = await response.json();
-        console.log(`Fetched ${data.data.length} audios.`);
-        setAudios(data.data);
-      } finally {
+    setFetching(true);
+    AudioRequest.All()
+      .then((audios) => {
+        if (audios) setAudios(audios);
+      })
+      .finally(() => {
         setFetching(false);
-      }
-    }
-    fetchData();
+      });
   }, []);
 
   return (

@@ -13,8 +13,8 @@ export function UpdateAudioForm({
   onClose,
   onSave,
 }: UpdateAudioFormProps) {
-  const [form, setForm] = useState<IAudio>(audio);
   const [tagInput, setTagInput] = useState("");
+  const [form, setForm] = useState<IAudio>(audio);
   const [addTags, setAddTags] = useState<string[]>([]);
   const [removeTags, setRemovedTags] = useState<string[]>([]);
 

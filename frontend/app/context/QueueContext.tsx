@@ -1,4 +1,10 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { IAudio } from "../models/IAudio";
 import { IPlaylist } from "../models/IPlaylist";
 import { useAudioContext } from "./AudioContext";
@@ -25,8 +31,22 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
   const [queuePointer, setPointer] = useState(-1);
   const [queue, setQueue] = useState<IAudio[]>([]);
 
+  useEffect(() => {
+    const queueString = localStorage.getItem("queuedAudios");
+    if (queueString != null) {
+      const audioObjects: IAudio[] = JSON.parse(queueString);
+      queueAudio(audioObjects);
+    }
+  }, []);
+
   function toggleRepeat() {
     setRepeat(!repeat);
+  }
+
+  function setQueueOnLocalStorage() {
+    if (queue.length == 0) return;
+    const queueString = JSON.stringify(queue);
+    localStorage.setItem("queuedAudios", queueString);
   }
 
   function shuffleQueue() {
@@ -49,6 +69,7 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
 
   function clearQueue() {
     setQueue([]);
+    localStorage.removeItem("queuedAudios");
   }
 
   function playNow(audio: IAudio) {
@@ -70,6 +91,8 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     const first = queue.length == 0;
     setQueue([...queue, ...(Array.isArray(audio) ? audio : [audio])]);
     if (first) setPointer(0);
+    console.log("queueing audio");
+    setQueueOnLocalStorage();
   }
 
   function queuePlaylist(playlist: IPlaylist) {

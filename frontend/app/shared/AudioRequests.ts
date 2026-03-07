@@ -1,11 +1,17 @@
 import { IAudio, IPostAudio, IUpdateAudio } from "../models/IAudio";
 
 export class AudioRequest {
-  public static async All() {}
-
-  public static async OneView(id: string) {}
-
-  public static async OneFull(id: string) {}
+  public static async All() {
+    try {
+      const request = await fetch("http://localhost:5123/api/audio");
+      if (request.ok) {
+        const response: { data: IAudio[] } = await request.json();
+        return response.data;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
 
   public static async AddAudio(audio: IPostAudio) {
     try {

@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { IAudio } from "../models/IAudio";
 import { useQueueContext } from "../context/QueueContext";
+import { useAudioCatalog } from "../hooks/useAudioCatalog";
 
 export function AudioControls() {
   const queueContext = useQueueContext();
+  const audioCatalog = useAudioCatalog();
   const [playing, setPlaying] = useState(false);
   const [currentPlaying, setCurrent] = useState<IAudio | null>(null);
-  const [currentTime, setCurrentTime] = useState<string>("00:00");
   const [totalDuration, setTotalDuration] = useState<string>("00:00");
+  const [currentTime, setCurrentTime] = useState<string>("00:00");
   const audioPlayerRef = useRef<HTMLAudioElement>(null);
   const audioPlayer = audioPlayerRef.current;
 
-  // Handle next audio
   useEffect(() => {
     const nextAudio = queueContext.queue[queueContext.queuePointer];
     if (nextAudio) {
@@ -21,30 +22,11 @@ export function AudioControls() {
     }
   }, [queueContext.queuePointer, queueContext.queue]);
 
-  // Handle metadata when audio element or currentPlaying changes
-  useEffect(() => {
-    if (audioPlayer && currentPlaying) {
-      // If duration is already available, set it immediately
-      if (!isNaN(audioPlayer.duration) && isFinite(audioPlayer.duration)) {
-        updateDuration(audioPlayer.duration);
-      }
-    }
-  }, [audioPlayer, currentPlaying]);
-
   function updateDuration(audioDurationSeconds: number) {
-    if (
-      currentPlaying &&
-      currentPlaying.metadata.duration !== audioDurationSeconds
-    ) {
-      // AudioRequest.UpdateDuration(currentPlaying.id, audioDurationSeconds);
-      console.log(audioDurationSeconds);
-    }
-
     const formattedDuration =
       audioDurationSeconds < 3600
         ? new Date(audioDurationSeconds * 1000).toISOString().slice(14, 19)
         : new Date(audioDurationSeconds * 1000).toISOString().slice(11, 19);
-
     setTotalDuration(formattedDuration);
   }
 
@@ -62,8 +44,6 @@ export function AudioControls() {
     }
   }
 
-  function handleShuffle() {}
-
   function handlePlayNext() {
     queueContext.playNext();
   }
@@ -79,9 +59,12 @@ export function AudioControls() {
   function handleMetadata() {
     if (audioPlayer) {
       const audioDurationSeconds = audioPlayer.duration;
-
       if (!isNaN(audioDurationSeconds) && isFinite(audioDurationSeconds)) {
         updateDuration(audioDurationSeconds);
+        if (currentPlaying && currentPlaying.metadata.duration == null) {
+          currentPlaying.metadata.duration = Math.floor(audioPlayer.duration);
+          audioCatalog.handleUpdateAudio(currentPlaying, [], []);
+        }
       }
     }
   }
@@ -143,7 +126,7 @@ export function AudioControls() {
           <button
             className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
             title="Shuffle"
-            onClick={handleShuffle}
+            onClick={queueContext.shuffleQueue}
           >
             <svg
               className="w-4 h-4"

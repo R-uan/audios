@@ -1,5 +1,5 @@
 export function getAudioDuration(url: string): Promise<number> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, _) => {
     const audio = new Audio(url);
 
     audio.addEventListener("loadedmetadata", () => {
