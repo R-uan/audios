@@ -9,5 +9,6 @@ namespace AudioArchive.Models {
     public string? Name { get; set; }
     public string? Reddit { get; set; }
     public string? Twitter { get; set; }
+    public string? Note { get; set; }
   }
 }

@@ -10,6 +10,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 // Services
+builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IAudioService, AudioService>();
 builder.Services.AddScoped<ICachingService, CachingService>();
 

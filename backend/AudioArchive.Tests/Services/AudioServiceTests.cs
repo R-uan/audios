@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using AudioArchive.Models;
 using AudioArchive.Database.Entity;
 using System.Data;
+using AudioArchive.Shared;
 
 namespace AudioArchive.Tests.Services
 {
@@ -83,7 +84,7 @@ namespace AudioArchive.Tests.Services
 
       await _service.StoreAudio(request); // first insert
 
-      await Assert.ThrowsAsync<DuplicateNameException>(() =>
+      await Assert.ThrowsAsync<DuplicatedAudioException>(() =>
           _service.StoreAudio(request)); // duplicate
     }
   }

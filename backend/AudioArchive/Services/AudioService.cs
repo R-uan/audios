@@ -119,8 +119,6 @@ namespace AudioArchive.Services
         audio.ArtistId = artist.Id;
       }
 
-      // Metadata
-      // Missing tags
       if (!string.IsNullOrEmpty(request.Mood)) audio.Metadata.Mood = request.Mood;
       if (request.Duration.HasValue) audio.Metadata.Duration = request.Duration.Value;
       if (!string.IsNullOrEmpty(request.Genrer)) audio.Metadata.Genrer = request.Genrer;
@@ -150,6 +148,10 @@ namespace AudioArchive.Services
 
       if (request.RemoveTags != null && request.RemoveTags.Count > 0) {
         audio.Metadata.Tags?.RemoveAll(t => request.RemoveTags.Contains(t.Name));
+        var emptyTags = database.Tags
+          .Include(t => t.AudioMetadatas)
+          .Where(t => t.AudioMetadatas == null || t.AudioMetadatas.Count == 0);
+        database.Tags.RemoveRange(emptyTags);
       }
 
       await database.SaveChangesAsync();

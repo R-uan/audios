@@ -15,8 +15,7 @@ namespace AudioArchive.Controllers
   {
     [HttpGet]
     public async Task<IActionResult> GetArtists() {
-      var requestPath = HttpContext.Request.GetDisplayUrl();
-      var cachingKey = $"getArtist:{requestPath}";
+      var cachingKey = $"getArtist:all";
 
       var artists = await _caching.GetValueAsync<List<Artist>>(cachingKey);
 
@@ -33,15 +32,9 @@ namespace AudioArchive.Controllers
 
     [HttpGet("{name}")]
     public async Task<IActionResult> GetArtistByName([FromRoute] string name) {
-      var requestPath = HttpContext.Request.GetDisplayUrl();
-      var cachingKey = $"getArtistName:{requestPath}";
-
-      var artists = await _caching.GetValueAsync<List<Artist>>(cachingKey);
-
-      if (artists == null) {
-        artists = await database.Artists.Where(t => EF.Functions.Like(t.Name, $"%{name}%")).ToListAsync();
-        await _caching.SetValueAsync(cachingKey, artists);
-      }
+      var artists = await database.Artists
+        .Where(t => EF.Functions.Like(t.Name, $"%{name}%"))
+        .ToListAsync();
 
       return Ok(new {
         artists.Count,
@@ -58,7 +51,8 @@ namespace AudioArchive.Controllers
 
     [HttpPatch("{artistId}")]
     public async Task<IActionResult> PatchArtist(
-        [FromRoute] string artistId, [FromBody] PatchArtistRequest body) {
+        [FromRoute] string artistId, 
+        [FromBody] PatchArtistRequest body) {
       if (!Guid.TryParse(artistId, out var id)) return base.BadRequest("Invalid Artist ID");
       var artist = await database.Artists.FindAsync(id) ?? throw new NotFoundException("Artist", artistId);
 

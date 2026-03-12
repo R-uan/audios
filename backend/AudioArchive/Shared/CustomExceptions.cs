@@ -9,7 +9,7 @@ namespace AudioArchive.Shared
   }
 
   public class DuplicatedAudioException(DuplicatedAudio entry) :
-    Exception("Artist already contains an audio with that title")
+    Exception($"Artist ({entry.Artist}) already contains an audio ({entry.Title}) with that title")
   {
     public DuplicatedAudio Entry { get; } = entry;
   }

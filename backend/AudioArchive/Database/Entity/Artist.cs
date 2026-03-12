@@ -7,6 +7,8 @@ namespace AudioArchive.Database.Entity {
     public required string Name { get; set; }
     public string? Reddit { get; set; }
     public string? Twitter { get; set; }
+    public string? Note { get; set; }
+
     [JsonIgnore]
     public List<Audio>? Audios { get; set; }
 
