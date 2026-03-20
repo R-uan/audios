@@ -1,16 +1,25 @@
-using AudioArchive.Models;
-
 namespace AudioArchive.Shared
 {
-  public class NotFoundException(string field, string target) :
-  Exception($"{field} ID was not found: {target}.")
+  public class APIException(string Message, int StatusCode) : Exception(Message)
   {
-    public string Target { get; } = target;
+    public int StatusCode { get; set; } = StatusCode;
   }
 
-  public class DuplicatedAudioException(DuplicatedAudio entry) :
-    Exception($"Artist ({entry.Artist}) already contains an audio ({entry.Title}) with that title")
+  public class NotFoundException(string Message, string Target) :
+    APIException(Message, StatusCodes.Status404NotFound)
   {
-    public DuplicatedAudio Entry { get; } = entry;
+    public string Target { get; } = Target;
+  }
+
+  public class DuplicatedAudioException(string Message, string Target) :
+     APIException(Message, StatusCodes.Status409Conflict)
+  {
+    public string Target { get; } = Target;
+  }
+
+  public class BadRequestException(string Message, string Target)
+    : APIException(Message, StatusCodes.Status400BadRequest)
+  {
+    public string Target { get; } = Target;
   }
 }

@@ -18,10 +18,6 @@ namespace AudioArchive.Controllers
     : ControllerBase
   {
 
-    /* Get All Audios
-     * Look for cached value and returns it else
-     * fetches values from the database and cache it.
-     */
     [HttpGet]
     public async Task<IActionResult> GetAudios() {
       var cachingKey = $"get_audio:all";
@@ -53,47 +49,74 @@ namespace AudioArchive.Controllers
       });
     }
 
-    /* Get Available Audio Tags
-     * No fetching because the count is small
-     */
     [HttpGet("tags")]
-    public async Task<IActionResult> GetAudioTags() {
-      var tags = await _database.Tags.Select(t => t.Name).ToListAsync();
-      return base.Ok(tags);
-    }
+    public async Task<IActionResult> GetAudioTags() =>
+      base.Ok(await _database.Tags.Select(t => t.Name).ToListAsync());
 
-    /* Get one Audio by Id
-     * No Caching
-     */
     [HttpGet("{audioId}")]
     public async Task<IActionResult> GetAudio([FromRoute] string audioId) {
-      if (Guid.TryParse(audioId, out var id)) return base.BadRequest();
+      if (Guid.TryParse(audioId, out var audioGuid))
+        throw new BadRequestException(
+          Message: "Could not parse given string into a valid guid.",
+          Target: audioId
+        );
+
       var audio = await _database.Audios.Include(a => a.Artist)
-      .Include(a => a.Metadata).ThenInclude(m => m.Tags)
-      .Where(a => a.Id == id).FirstOrDefaultAsync()
-      ?? throw new NotFoundException("Audio", audioId);
+        .Include(a => a.Metadata).ThenInclude(m => m.Tags)
+        .Where(a => a.Id == audioGuid).FirstOrDefaultAsync() ??
+          throw new NotFoundException(
+            Message: "Could not find audio entry.",
+            Target: audioId
+          );
+
       return base.Ok(AudioView.From(audio));
     }
 
     [HttpPost]
-    public async Task<IActionResult> PostAudio([FromBody] PostAudioRequest request) {
-      var audio = await _service.StoreAudio(request);
-      return base.Ok(AudioView.From(audio));
-    }
+    public async Task<IActionResult> PostAudio([FromBody] PostAudioRequest request)
+      => base.Ok(AudioView.From(await _service.StoreAudio(request)));
 
     [HttpPost("bulk")]
     public async Task<IActionResult> PostMultipleAudios([FromBody] List<PostAudioRequest> request) {
-      var result = await _service.BulkStoreAudios(request);
-      return base.Ok(result);
+      List<AudioView> savedAudios = [];
+      List<string> failedAdditions = [];
+      List<string> duplicatedAudios = [];
+
+      foreach (var entry in request) {
+        try {
+          var audio = await _service.StoreAudio(entry);
+          savedAudios.Add(AudioView.From(audio));
+        } catch (Exception e) {
+          if (e is DuplicatedAudioException) {
+            duplicatedAudios.Add(entry.Link);
+            continue;
+          } else {
+            failedAdditions.Add(entry.Link);
+            continue;
+          }
+        }
+      }
+
+      return base.Ok(new {
+        SavedAudios = savedAudios,
+        FailedAdditions = failedAdditions,
+        DuplicatedAudios = duplicatedAudios,
+      });
     }
 
     [HttpDelete("{audioId}")]
     public async Task<IActionResult> DeleteAudio([FromRoute] string audioId) {
-      if (!Guid.TryParse(audioId, out var id))
-        return base.BadRequest("The Audio ID is invalid.");
+      if (Guid.TryParse(audioId, out var audioGuid))
+        throw new BadRequestException(
+          Message: "Could not parse given string into a valid guid.",
+          Target: audioId
+        );
 
-      var audio = await _database.Audios.FindAsync(id)
-        ?? throw new NotFoundException("Audio", audioId);
+      var audio = await _database.Audios.FindAsync(audioGuid) ??
+        throw new NotFoundException(
+          Message: "Could not find audio entry.",
+          Target: audioId
+        );
 
       _database.Audios.Remove(audio);
       await _database.SaveChangesAsync();
@@ -103,7 +126,6 @@ namespace AudioArchive.Controllers
 
     [HttpGet("q")]
     public async Task<IActionResult> QueryAudios([FromQuery] AudioSearchParams parameters) {
-      // The path containst the query (or I assume) so it can be used as the key for caching;
       var requestPath = HttpContext.Request.GetDisplayUrl();
       var cachingKey = $"queryAudio:{requestPath}";
       var audios = await _caching.GetValueAsync<List<Audio>>(cachingKey);
@@ -113,10 +135,10 @@ namespace AudioArchive.Controllers
         await _caching.SetValueAsync(cachingKey, audios);
       }
 
-      var audiosView = audios.Select(AudioView.From).ToList();
+      var audiosViews = audios.Select(AudioView.From).ToList();
       return base.Ok(new {
-        audiosView.Count,
-        Data = audiosView
+        audiosViews.Count,
+        Data = audiosViews
       });
     }
 

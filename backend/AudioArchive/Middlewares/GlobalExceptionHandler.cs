@@ -1,28 +1,27 @@
 using AudioArchive.Shared;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 
-namespace AudioArchive.Middlewares {
-  public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> _logger) : IExceptionHandler {
+namespace AudioArchive.Middlewares
+{
+  public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> _logger) : IExceptionHandler
+  {
     public async ValueTask<bool> TryHandleAsync(HttpContext ctx, Exception ex, CancellationToken cancellationToken) {
-      Console.WriteLine(ex);
-      ctx.Response.StatusCode = 500;
-
-      var problemDetails = new ProblemDetails {
-        Title = "An unexpected error has occurred.",
-        Status = StatusCodes.Status500InternalServerError,
-        Instance = ctx.Request.Path
-      };
-
-      if (ex is NotFoundException) {
-        problemDetails = new ProblemDetails {
-          Status = StatusCodes.Status404NotFound,
-          Detail = ex.Message,
-          Instance = ctx.Request.Path
-        };
+      _logger.LogError(ex, ex.Message);
+      if (ex is APIException apiEx) {
+        ctx.Response.StatusCode = apiEx.StatusCode;
+        await ctx.Response.WriteAsJsonAsync(new {
+          apiEx.StatusCode,
+          apiEx.Message,
+          ctx.Request.Path
+        }, cancellationToken);
+      } else {
+        ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        await ctx.Response.WriteAsJsonAsync(new {
+          StatusCode = StatusCodes.Status500InternalServerError,
+          Message = "An unexpected exception has occurred.",
+          ctx.Request.Path
+        }, cancellationToken);
       }
-
-      await ctx.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
       return true;
     }
   }

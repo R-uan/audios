@@ -29,62 +29,31 @@ namespace AudioArchive.Services
       // Because EF already wraps the SaveChangesAsync into a transaction 
       // and we only call it once here, the explicitly call is redundant.
       // var transaction = database.Database.BeginTransaction();
-      try {
-        var artist = await database.Artists
-          .Include(a => a.Audios)
-          .Where(a => a.Name == request.Artist)
-          .FirstOrDefaultAsync() ?? new Artist {
-            Name = request.Artist,
-            Id = Guid.NewGuid()
-          };
+      var artist = await database.Artists
+        .Include(a => a.Audios)
+        .Where(a => a.Name == request.Artist)
+        .FirstOrDefaultAsync() ?? new Artist {
+          Name = request.Artist,
+          Id = Guid.NewGuid()
+        };
 
-        var audio = Audio.FromRequest(request, artist);
+      var audio = Audio.FromRequest(request, artist);
 
-        if (artist.Audios != null && artist.Audios.Any(a => a.Title.Contains(audio.Title))) {
-          throw new DuplicatedAudioException(DuplicatedAudio.From(audio));
-        }
-
-        if (request.Tags != null) {
-          var audioTags = await this.ProcessTags(request.Tags);
-          audio.Metadata.Tags = [.. audioTags];
-        }
-
-        await database.Audios.AddAsync(audio);
-        await database.SaveChangesAsync();
-        return audio;
-      } catch (Exception) {
-        Console.WriteLine("get a real loggin system");
-        throw;
-      }
-    }
-
-    public async Task<BulkStoreAudioResult> BulkStoreAudios(List<PostAudioRequest> requests) {
-      List<AudioView> savedAudios = [];
-      List<AddAudioFailed> failedAdditions = [];
-      List<DuplicatedAudio> duplicatedAudios = [];
-
-      foreach (var request in requests) {
-        try {
-          var audio = await this.StoreAudio(request);
-          savedAudios.Add(AudioView.From(audio));
-        } catch (Exception e) {
-          if (e is DuplicatedAudioException duplicated) {
-            duplicatedAudios.Add(duplicated.Entry);
-            continue;
-          } else {
-            Console.WriteLine("Get a real logger: BulkStoreAudio");
-            failedAdditions.Add(AddAudioFailed.From(request));
-            continue;
-          }
-
-        }
+      if (artist.Audios != null && artist.Audios.Any(a => a.Title.Contains(audio.Title))) {
+        throw new DuplicatedAudioException(
+          Message: "Attempted to add an already stored audio",
+          Target: request.Link
+        );
       }
 
-      return new BulkStoreAudioResult {
-        SavedAudios = savedAudios,
-        FailedAdditions = failedAdditions,
-        DuplicatedAudios = duplicatedAudios,
-      };
+      if (request.Tags != null) {
+        var audioTags = await this.ProcessTags(request.Tags);
+        audio.Metadata.Tags = [.. audioTags];
+      }
+
+      await database.Audios.AddAsync(audio);
+      await database.SaveChangesAsync();
+      return audio;
     }
 
     public async Task<Audio> UpdateAudio(Guid audioId, PatchAudioRequest request) {
@@ -94,7 +63,10 @@ namespace AudioArchive.Services
         .Include(a => a.Artist)
         .Where(a => a.Id == audioId)
         .FirstOrDefaultAsync() ??
-        throw new NotFoundException("Audio", audioId.ToString());
+          throw new NotFoundException(
+            Message: "Could not find audio entry.",
+            Target: audioId.ToString()
+          );
 
       if (!string.IsNullOrEmpty(request.Title)) audio.Title = request.Title;
       if (!string.IsNullOrEmpty(request.Link)) audio.Link = request.Link;
@@ -148,10 +120,6 @@ namespace AudioArchive.Services
 
       if (request.RemoveTags != null && request.RemoveTags.Count > 0) {
         audio.Metadata.Tags?.RemoveAll(t => request.RemoveTags.Contains(t.Name));
-        var emptyTags = database.Tags
-          .Include(t => t.AudioMetadatas)
-          .Where(t => t.AudioMetadatas == null || t.AudioMetadatas.Count == 0);
-        database.Tags.RemoveRange(emptyTags);
       }
 
       await database.SaveChangesAsync();

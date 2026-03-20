@@ -30,8 +30,18 @@ namespace AudioArchive.Controllers
 
     [HttpDelete("{tagId}")]
     public async Task<IActionResult> DeleteTag([FromRoute] string tagId) {
-      if (!Guid.TryParse(tagId, out var id)) return base.BadRequest("Invalid id");
-      var tag = await database_.Tags.FindAsync(id) ?? throw new NotFoundException("Tag", tagId);
+      if (!Guid.TryParse(tagId, out var tagGuid))
+        throw new BadRequestException(
+          Message: "Could not parse given string into a valid guid.",
+          Target: tagId
+        );
+
+      var tag = await database_.Tags.FindAsync(tagGuid) ??
+        throw new NotFoundException(
+          Message: "Could not find tag entry.",
+          Target: tagId
+        );
+
       database_.Tags.Remove(tag);
       await database_.SaveChangesAsync();
       return base.Ok(tag);
@@ -39,8 +49,13 @@ namespace AudioArchive.Controllers
 
     [HttpPatch("{tagId}")]
     public async Task<IActionResult> UpdateTag([FromRoute] string tagId, [FromBody] PatchTagRequest body) {
-      if (!Guid.TryParse(tagId, out var guid)) return base.BadRequest();
-      var tag = await _service.UpdateTagProperties(guid, body);
+      if (!Guid.TryParse(tagId, out var tagGuid))
+        throw new BadRequestException(
+          Message: "Could not parse given string into a valid guid.",
+          Target: tagId
+        );
+
+      var tag = await _service.UpdateTagProperties(tagGuid, body);
       return base.Ok(new { tag.Name, tag.Description });
     }
   }

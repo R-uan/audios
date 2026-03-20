@@ -1,6 +1,7 @@
 using AudioArchive.Database;
 using AudioArchive.Database.Entity;
 using AudioArchive.Models;
+using AudioArchive.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,53 +25,73 @@ namespace AudioArchive.Controllers
     }
 
     [HttpGet("{playlistId}")]
-    public async Task<IActionResult> GetPlaylist([FromRoute] Guid playlistId) {
-      var playlist = await _database.Playlists
-        .Include(p => p.Audios)
+    public async Task<IActionResult> GetPlaylist([FromRoute] string playlistId) {
+      if (!Guid.TryParse(playlistId, out var playlistGuid))
+        throw new BadRequestException(
+          Message: "Could not parse given string into a valid guid.",
+          Target: playlistId
+        );
+
+      return base.Ok(await _database.Playlists.Include(p => p.Audios)
         .Select(p => new {
           p.Id,
           p.Name,
           p.CreatedAt,
           Audios = p.Audios != null ? p.Audios.Select(a => a.Id) : null,
-        }).FirstOrDefaultAsync(p => p.Id == playlistId);
-      return playlist != null ? base.Ok(playlist) : base.NotFound();
+        }).FirstOrDefaultAsync(p => p.Id == playlistGuid) ??
+          throw new NotFoundException(
+            Message: $"Playlist entry was not found.",
+            Target: playlistId
+          )
+        );
     }
 
     [HttpPost]
     public async Task<IActionResult> CreatePlaylist([FromBody] CreatePlaylistRequest request) {
-      var transaction = await _database.Database.BeginTransactionAsync();
-      try {
-        var playlist = Playlist.FromRequest(request);
-        if (request.Audios != null && request.Audios.Count != 0) {
-          var validIds = request.Audios.Where(a => a != Guid.Empty);
-          var existingAudios = await _database.Audios.Where(a => validIds.Contains(a.Id)).ToListAsync();
-          playlist.Audios = existingAudios;
-        }
-
-        var save = await _database.Playlists.AddAsync(playlist);
-        await _database.SaveChangesAsync();
-        await transaction.CommitAsync();
-
-        return base.Ok(new {
-          save.Entity.Id,
-          save.Entity.Name,
-          save.Entity.CreatedAt,
-          Audios = save.Entity.Audios?.Select(a => a.Id.ToString())
-        });
-      } catch {
-        await transaction.RollbackAsync();
-        throw;
+      var playlist = Playlist.FromRequest(request);
+      if (request.Audios != null && request.Audios.Count != 0) {
+        var validIds = request.Audios.Where(a => a != Guid.Empty);
+        var existingAudios = await _database.Audios.Where(a => validIds.Contains(a.Id)).ToListAsync();
+        playlist.Audios = existingAudios;
       }
+
+      var save = await _database.Playlists.AddAsync(playlist);
+      await _database.SaveChangesAsync();
+
+      return base.Ok(new {
+        save.Entity.Id,
+        save.Entity.Name,
+        save.Entity.CreatedAt,
+        Audios = save.Entity.Audios?.Select(a => a.Id)
+      });
     }
 
     [HttpDelete("{playlistId}")]
     public async Task<IActionResult> DeletePlaylist([FromRoute] string playlistId) {
-      if (!Guid.TryParse(playlistId, out var playlistGuid)) return base.BadRequest("Invalid id");
-      var playlist = await _database.Playlists.FindAsync(playlistGuid);
-      if (playlist == null) return base.NotFound("Playlist not found.");
+      if (!Guid.TryParse(playlistId, out var playlistGuid))
+        throw new BadRequestException(
+          Message: "Could not parse given string into a valid guid.",
+          Target: playlistId
+        );
+
+
+      var playlist = await _database.Playlists.FindAsync(playlistGuid) ??
+        throw new NotFoundException(
+          Message: $"Playlist entry was not found.",
+          Target: playlistId
+        );
+
       _database.Playlists.Remove(playlist);
       await _database.SaveChangesAsync();
-      return base.Ok(new { Deleted = playlistId });
+
+      return base.Ok(new {
+        Message = $"Playlist {playlist.Name} sucessfully deleted.",
+        Deleted = new {
+          playlist.Id,
+          playlist.Name,
+          AudioCount = playlist.Audios == null ? 0 : playlist.Audios.Count
+        }
+      });
     }
 
     [HttpPatch("{playlistId}")]
@@ -78,10 +99,18 @@ namespace AudioArchive.Controllers
         [FromRoute] string playlistId,
         [FromBody] PatchPlaylistRequest request
       ) {
-      if (!Guid.TryParse(playlistId, out var guidId)) return base.BadRequest(new { error = "Invalid GUID format" });
+      if (!Guid.TryParse(playlistId, out var playlistGuid))
+        throw new BadRequestException(
+          Message: "Could not parse given string into a valid guid.",
+          Target: playlistId
+        );
 
-      var playlist = await _database.Playlists.Include(p => p.Audios).FirstOrDefaultAsync(p => p.Id == guidId);
-      if (playlist == null) return base.NotFound(new { result = "Playlist was not found." });
+      var playlist = await _database.Playlists.Include(p => p.Audios)
+        .FirstOrDefaultAsync(p => p.Id == playlistGuid) ??
+          throw new NotFoundException(
+            Message: $"Playlist entry was not found.",
+            Target: playlistId
+          );
 
       if (!string.IsNullOrEmpty(request.Name)) playlist.Name = request.Name;
 
