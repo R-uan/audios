@@ -1,44 +1,30 @@
-import { useState } from "react";
-import { usePlaylistContext } from "../context/PlaylistContext";
-import { useQueueContext } from "../context/QueueContext";
-import { IPlaylist } from "../models/IPlaylist";
-import { useContextMenu } from "./ContextMenu";
 import { Modal } from "./Modal";
+import { useState } from "react";
+import { useContextMenu } from "./ContextMenu";
+import { IPlaylist } from "../models/IPlaylist";
+import { useQueueContext } from "../context/QueueContext";
 import { CreatePlaylistForm } from "./form/CreatePlaylistForm";
+import { usePlaylistContext } from "../context/PlaylistContext";
 
 export function PlaylistSection() {
-  const playlistContext = usePlaylistContext();
   const queueContext = useQueueContext();
+  const playlistContext = usePlaylistContext();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [playlistsOpen, setPlaylistsOpen] = useState(true);
-
   const { handleRightClick, contextMenu, ContextMenu, closeContextMenu } =
     useContextMenu<IPlaylist>("left_section");
 
-  function playNow() {
-    if (contextMenu) {
-      queueContext.clearQueue();
-      queueContext.queuePlaylist(contextMenu.data);
-    }
+  function playPlaylist() {
+    if (contextMenu == null) return;
+    queueContext.clearQueue();
+    queueContext.queuePlaylist(contextMenu.data);
     closeContextMenu();
   }
 
   async function deletePlaylist(playlistId: string) {
-    const request = await fetch(
-      `http://localhost:5123/api/playlist/${playlistId}`,
-      {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-
-    if (request.ok) {
-      const response: { deleted: string } = await request.json();
-      playlistContext.removePlaylist(response.deleted);
-    }
-
     closeContextMenu();
+    await playlistContext.removePlaylist(playlistId);
   }
 
   return (
@@ -102,7 +88,7 @@ export function PlaylistSection() {
 
       <ContextMenu>
         <button
-          onClick={playNow}
+          onClick={playPlaylist}
           className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
         >
           Play now
@@ -116,7 +102,9 @@ export function PlaylistSection() {
         >
           Add to queue
         </button>
-        <hr className="my-1 border-zinc-700/60" />
+
+        <hr className="my-1 mx-3 border-zinc-700/40" />
+
         <button
           onClick={() => {
             if (contextMenu) deletePlaylist(contextMenu.data.id);

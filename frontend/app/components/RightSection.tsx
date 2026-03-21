@@ -302,7 +302,9 @@ export function RightSection() {
         >
           Remove from queue
         </button>
-        <hr className="my-1 border-zinc-700/60" />
+
+        <hr className="my-1 mx-3 border-zinc-700/40" />
+
         <button
           onClick={seeMoreOfArtist}
           className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"

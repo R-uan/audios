@@ -8,6 +8,7 @@ import {
 import { IAudio } from "../models/IAudio";
 import { IPlaylist } from "../models/IPlaylist";
 import { useAudioContext } from "./AudioContext";
+import { useNoticeContext } from "./NoticeContext";
 
 interface QueueContextType {
   queue: IAudio[];
@@ -27,6 +28,7 @@ const QueueContext = createContext<QueueContextType | undefined>(undefined);
 
 export function QueueContextProvider({ children }: { children: ReactNode }) {
   const audioContext = useAudioContext();
+  const noticeContext = useNoticeContext();
   const [repeat, setRepeat] = useState(false);
   const [queuePointer, setPointer] = useState(-1);
   const [queue, setQueue] = useState<IAudio[]>([]);
@@ -36,6 +38,13 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     if (queueString != null) {
       const audioObjects: IAudio[] = JSON.parse(queueString);
       queueAudio(audioObjects);
+      noticeContext.sendNotice({
+        success: true,
+        title: "Restoing Audio Queue",
+        source: "QueueContextProvider",
+        id: `queue-audio-${Math.random()}`,
+        message: `Restored ${audioObjects.length} audio(s) to the queue.`,
+      });
     }
   }, []);
 
@@ -65,6 +74,7 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
       setPointer(0);
       return [currentAudio, ...remaining];
     });
+    setQueueOnLocalStorage();
   }
 
   function clearQueue() {
@@ -99,6 +109,13 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     setQueue(newQueue);
     setQueueOnLocalStorage();
     if (first) setPointer(0);
+    noticeContext.sendNotice({
+      success: true,
+      title: "Queueing Audios",
+      source: "QueueContextProvider",
+      id: `queue-audio-${Math.random()}`,
+      message: `Added ${newItems.length} audio(s) to the queue.`,
+    });
   }
 
   function queuePlaylist(playlist: IPlaylist) {

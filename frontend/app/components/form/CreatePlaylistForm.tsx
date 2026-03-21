@@ -1,17 +1,14 @@
 import { useState } from "react";
-import { Modal } from "../Modal";
-import { usePlaylistContext } from "@/app/context/PlaylistContext";
-import { useContextMenu } from "../ContextMenu";
-import { IPlaylist } from "@/app/models/IPlaylist";
 import { useQueueContext } from "@/app/context/QueueContext";
+import { usePlaylistContext } from "@/app/context/PlaylistContext";
 
 interface CreatePlaylistFormProps {
   onClose: () => void;
 }
 
 export function CreatePlaylistForm({ onClose }: CreatePlaylistFormProps) {
-  const playlistContext = usePlaylistContext();
   const queueContext = useQueueContext();
+  const playlistContext = usePlaylistContext();
 
   const [inputValue, setInputValue] = useState("");
   const [isChecked, setIsChecked] = useState(false);
@@ -23,18 +20,7 @@ export function CreatePlaylistForm({ onClose }: CreatePlaylistFormProps) {
     };
 
     if (isChecked) data.audios = queueContext.queue.map((a) => a.id);
-
-    const request = await fetch("http://localhost:5123/api/playlist", {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (request.ok) {
-      const response: IPlaylist = await request.json();
-      playlistContext.addPlaylist(response);
-    }
-
+    playlistContext.createPlaylist(data);
     setInputValue("");
     setIsChecked(false);
     onClose();

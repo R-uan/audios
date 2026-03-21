@@ -6,13 +6,15 @@ import {
   useState,
 } from "react";
 import { IPlaylist } from "../models/IPlaylist";
+import { useNoticeContext } from "./NoticeContext";
+import { PlaylistRequests } from "../shared/PlaylistRequests";
 
 interface PlaylistContextType {
-  addPlaylist: (playlist: IPlaylist) => void;
   playlists: Map<string, IPlaylist>;
   currentPlaylist: IPlaylist | null;
-  removePlaylist: (id: string) => void;
+  removePlaylist: (id: string) => Promise<void>;
   setCurrentPlaylist: (id: string | null) => void;
+  createPlaylist: (data: { name: string; audios: string[] | null }) => void;
 }
 
 const PlaylistContext = createContext<PlaylistContextType | undefined>(
@@ -20,21 +22,65 @@ const PlaylistContext = createContext<PlaylistContextType | undefined>(
 );
 
 export function PlaylistContextProvider({ children }: { children: ReactNode }) {
-  const [fetching, setFetching] = useState(false);
+  const noticeContext = useNoticeContext();
+  const [processing, setProcessing] = useState(false);
   const [currentPlaylist, setCurrent] = useState<IPlaylist | null>(null);
   const [playlists, setPlaylists] = useState<Map<string, IPlaylist>>(new Map());
 
-  const addPlaylist = (playlist: IPlaylist) => {
-    const newMap = playlists;
-    newMap.set(playlist.id, playlist);
-    setPlaylists(newMap);
-  };
+  async function createPlaylist(data: {
+    name: string;
+    audios: string[] | null;
+  }) {
+    if (processing) return;
 
-  const removePlaylist = (id: string) => {
-    const newMap = playlists;
-    newMap.delete(id);
-    setPlaylists(newMap);
-  };
+    const response = await PlaylistRequests.PostPlaylist(data);
+    if (PlaylistRequests.isRequestError(response)) {
+      noticeContext.sendNotice({
+        id: `create-playlist-${data.name}`,
+        success: false,
+        title: "Creating Playlist",
+        source: "CreatePlaylistForm",
+        message: `Could not create playlist "${data.name}": ${response.statusCode}`,
+      });
+    } else {
+      const newPlaylistMap = playlists;
+      newPlaylistMap.set(response.id, response);
+      setPlaylists(newPlaylistMap);
+
+      noticeContext.sendNotice({
+        id: response.id,
+        success: true,
+        title: "Creating Playlist",
+        source: "CreatePlaylistForm",
+        message: `Playlist "${response.name}" created with ${response.audios.length} audios.`,
+      });
+    }
+  }
+
+  async function removePlaylist(id: string) {
+    const response = await PlaylistRequests.DeletePlaylist(id);
+    if (PlaylistRequests.isRequestError(response)) {
+      noticeContext.sendNotice({
+        id: `create-playlist-${id}`,
+        success: false,
+        title: "Deleting Playlist",
+        source: "PlaylistContentProvider",
+        message: `Could not delete playlist: ${response.statusCode}`,
+      });
+    } else {
+      const newPlaylistMap = playlists;
+      newPlaylistMap.delete(id);
+      setPlaylists(newPlaylistMap);
+
+      noticeContext.sendNotice({
+        id: `create-playlist-${id}`,
+        success: true,
+        title: "Delete Playlist",
+        source: "PlaylistContextProvider",
+        message: `Playlist Deleted`,
+      });
+    }
+  }
 
   const setCurrentPlaylist = (id: string | null) => {
     if (id != null) {
@@ -46,16 +92,31 @@ export function PlaylistContextProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function fetchPlaylists() {
       try {
-        setFetching(true);
-        const response = await fetch("http://localhost:5123/api/playlist");
-        if (!response.ok) console.log("Could not fetch audio data");
-        const result: IPlaylist[] = await response.json();
-        const tempMap = new Map<string, IPlaylist>();
-        result.forEach((p) => tempMap.set(p.id, p));
-        console.log(`fetched ${result.length} playlists`);
-        setPlaylists(tempMap);
+        setProcessing(true);
+        const response = await PlaylistRequests.GetPlaylists();
+        if (response == null) {
+          noticeContext.sendNotice({
+            id: "initial-playlist-fetch",
+            title: "Playlist Request Failed.",
+            source: "PlaylistContextProvider",
+            message: "Could not fetch playlists.",
+            success: false,
+          });
+        } else {
+          const tempMap = new Map<string, IPlaylist>();
+          response.forEach((p) => tempMap.set(p.id, p));
+
+          noticeContext.sendNotice({
+            id: "initial-playlist-fetch",
+            title: "Playlist Request.",
+            source: "PlaylistContextProvider",
+            message: `Fetched ${response.length} playlists.`,
+            success: true,
+          });
+          setPlaylists(tempMap);
+        }
       } finally {
-        setFetching(false);
+        setProcessing(false);
       }
     }
 
@@ -69,7 +130,7 @@ export function PlaylistContextProvider({ children }: { children: ReactNode }) {
         currentPlaylist,
         setCurrentPlaylist,
         removePlaylist,
-        addPlaylist,
+        createPlaylist,
       }}
     >
       {children}

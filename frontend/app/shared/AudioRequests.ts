@@ -1,57 +1,63 @@
 import { IAudio, IPostAudio, IUpdateAudio } from "../models/IAudio";
+import { IRequestError } from "../models/IRequestError";
+
+const API_URL = "http://localhost:5123/api";
 
 export class AudioRequest {
-  public static async All() {
-    try {
-      const request = await fetch("http://localhost:5123/api/audio");
-      if (request.ok) {
-        const response: { data: IAudio[] } = await request.json();
-        return response.data;
-      }
-    } catch (e) {
-      return null;
+  public static async All(): Promise<IAudio[] | null> {
+    const request = await fetch(`${API_URL}/audio`);
+    if (!request.ok) return null;
+    const response: { data: IAudio[] } = await request.json();
+    return response.data;
+  }
+
+  public static async PostAudio(
+    audio: IPostAudio,
+  ): Promise<IAudio | IRequestError> {
+    const request = await fetch(`${API_URL}/audio`, {
+      method: "POST",
+      body: JSON.stringify(audio),
+      headers: { "Content-Type": "application/json" },
+    });
+    if (request.ok) {
+      const response: IAudio = await request.json();
+      return response;
+    } else {
+      const error: IRequestError = await request.json();
+      return error;
     }
   }
 
-  public static async AddAudio(audio: IPostAudio) {
-    try {
-      const request = await fetch("http://localhost:5123/api/audio", {
-        method: "POST",
-        body: JSON.stringify(audio),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (request.ok) {
-        const response: IAudio = await request.json();
-        return response;
-      }
-      return null;
-    } catch (error) {
-      console.log(error);
-      return null;
-    }
-  }
-
-  public static async UpdateAudio(id: string, body: IUpdateAudio) {
-    const request = await fetch(`http://localhost:5123/api/audio/${id}`, {
+  public static async UpdateAudio(
+    id: string,
+    body: IUpdateAudio,
+  ): Promise<IAudio | IRequestError> {
+    const request = await fetch(`${API_URL}/audio/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
-
-    if (request.ok) return await request.json();
-    return null;
+    if (request.ok) {
+      const response: IAudio = await request.json();
+      return response;
+    } else {
+      const error: IRequestError = await request.json();
+      return error;
+    }
   }
 
-  public static async DeleteAudio(id: string) {
-    const request = await fetch(`http://localhost:5123/api/audio/${id}`, {
+  public static async DeleteAudio(
+    id: string,
+  ): Promise<{ deleted: string } | IRequestError> {
+    const request = await fetch(`${API_URL}/audio/${id}`, {
       method: "DELETE",
     });
-    if (request.ok) return true;
-    return false;
+    if (request.ok) {
+      const response: { deleted: string } = await request.json();
+      return response;
+    } else {
+      const error: IRequestError = await request.json();
+      return error;
+    }
   }
-
-  public static async UpdateDuration(id: string, duration: number) {}
 }

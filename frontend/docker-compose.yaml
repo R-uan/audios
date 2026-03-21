@@ -1,0 +1,7 @@
+services:
+  app:
+    restart: unless-stopped
+    container_name: web-playlist
+    ports:
+      - "3099:3099"
+    build: .

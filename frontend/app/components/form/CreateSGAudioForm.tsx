@@ -75,7 +75,7 @@ export function CreateSGAudioForm() {
       const { title, artist, url, source } = await request.json();
       const duration = await getAudioDuration(source);
 
-      const audio: IPostAudio = {
+      const newAudio: IPostAudio = {
         title,
         artist,
         source,
@@ -88,13 +88,8 @@ export function CreateSGAudioForm() {
         releaseYear: form.releaseYear ? parseInt(form.releaseYear) : null,
       };
 
-      const post = await AudioRequest.AddAudio(audio);
-      if (post != null) {
-        console.log(post);
-        audioContext.addAudio(post);
-        setIsOpen(false);
-      }
-
+      await audioContext.addNewAudio(newAudio);
+      setIsOpen(false);
       setForm(defaultSGForm);
     }
   }

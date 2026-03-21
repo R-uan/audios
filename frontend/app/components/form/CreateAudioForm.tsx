@@ -77,7 +77,7 @@ export function CreateAudioForm() {
   async function handleSubmit() {
     if (!isValid) return;
 
-    const audio: IPostAudio = {
+    const newAudio: IPostAudio = {
       tags: form.tags,
       local: form.local,
       link: form.link.trim(),
@@ -90,12 +90,9 @@ export function CreateAudioForm() {
       releaseYear: form.releaseYear ? parseInt(form.releaseYear) : null,
     };
 
-    const post = await AudioRequest.AddAudio(audio);
-    if (post != null) {
-      console.log(post);
-      audioContext.addAudio(post);
-      setIsOpen(false);
-    }
+    await audioContext.addNewAudio(newAudio);
+    setIsOpen(false);
+    setForm(defaultForm);
   }
 
   return (

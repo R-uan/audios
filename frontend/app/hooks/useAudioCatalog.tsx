@@ -4,7 +4,6 @@ import { useQueueContext } from "../context/QueueContext";
 import { usePlaylistContext } from "../context/PlaylistContext";
 import { useFilters } from "../context/AudioFilterContext";
 import { useContextMenu } from "../components/ContextMenu";
-import { AudioRequest } from "../shared/AudioRequests";
 import { IAudio, IUpdateAudio } from "../models/IAudio";
 
 export function useAudioCatalog() {
@@ -98,16 +97,13 @@ export function useAudioCatalog() {
       removeTags: remove,
     };
 
-    const newAudio = await AudioRequest.UpdateAudio(audio.id, update);
-    if (newAudio != null) audioContext.updateAudio(newAudio);
+    await audioContext.updateAudio(audio.id, update);
     setEditingAudio(null);
   }
 
   async function handleDeleteAudio() {
-    if (contextMenu != null) {
-      if (await AudioRequest.DeleteAudio(contextMenu.data.id))
-        audioContext.deleteAudio(contextMenu.data.id);
-    }
+    if (contextMenu == null) return;
+    await audioContext.deleteAudio(contextMenu.data.id);
     closeContextMenu();
   }
 
@@ -116,7 +112,6 @@ export function useAudioCatalog() {
       queueContext.queueAudio(audiosToRender);
   }
 
-  // useAudioCatalog.ts
   return {
     currentPlaylist,
     audiosToRender,
@@ -125,7 +120,7 @@ export function useAudioCatalog() {
     contextMenu,
     ContextMenu,
     handleRightClick,
-    closeContextMenu, // 👈
+    closeContextMenu,
     handlePlayAudio,
     handleQueueAudio,
     handleEditAudio,

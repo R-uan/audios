@@ -19,9 +19,8 @@
           bun
           prettier
           vscode-css-languageserver
-          nodePackages.vscode-langservers-extracted
-          nodePackages.sass
           typescript-language-server
+          nodePackages.vscode-langservers-extracted
         ];
 
         env = {
@@ -31,7 +30,10 @@
         };
 
         shellHook = ''
-          mkdir -p .nix-shell/{npm,npm-global}
+          export PKG_CONFIG_PATH="${pkgs.glib.dev}/lib/pkgconfig:$PKG_CONFIG_PATH"
+          mkdir -p .nix-shell/{cargo,rustup,npm,npm-global}
+          export CARGO_HOME="$PWD/.nix-shell/cargo"
+          export RUSTUP_HOME="$PWD/.nix-shell/rustup"
           echo "Development shell initialized"
         '';
       };

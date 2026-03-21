@@ -64,8 +64,6 @@ export function AudioCatalog() {
             Add to queue
           </button>
 
-          <hr className="my-1 border-zinc-700/60" />
-
           <a
             href={contextMenu?.data?.link}
             onClick={() => closeContextMenu()}
@@ -75,6 +73,15 @@ export function AudioCatalog() {
           >
             Open Link
           </a>
+
+          <button
+            onClick={() => contextMenu?.data.artist}
+            className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+          >
+            See more about {contextMenu?.data.artist}
+          </button>
+
+          <hr className="my-1 mx-3 border-zinc-700/40" />
 
           <button
             onClick={handleEditAudio}
