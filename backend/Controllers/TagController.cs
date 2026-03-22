@@ -1,6 +1,5 @@
 using AudioArchive.Database;
 using AudioArchive.Models;
-using AudioArchive.Services;
 using AudioArchive.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,11 +8,11 @@ namespace AudioArchive.Controllers
 {
   [Route("api/tag")]
   [ApiController]
-  public class TagController(AudioDatabaseContext database_, ITagService _service) : ControllerBase
+  public class TagController(AudioDatabaseContext database) : ControllerBase
   {
     [HttpGet]
     public async Task<IActionResult> GetTags() {
-      var tags = await database_.Tags
+      var tags = await database.Tags
         .Include(t => t.AudioMetadatas)
         .Select(t => new {
           t.Name,
@@ -36,26 +35,41 @@ namespace AudioArchive.Controllers
           Target: tagId
         );
 
-      var tag = await database_.Tags.FindAsync(tagGuid) ??
+      var tag = await database.Tags.FindAsync(tagGuid) ??
         throw new NotFoundException(
           Message: "Could not find tag entry.",
           Target: tagId
         );
 
-      database_.Tags.Remove(tag);
-      await database_.SaveChangesAsync();
-      return base.Ok(tag);
+      database.Tags.Remove(tag);
+      await database.SaveChangesAsync();
+
+      return base.Ok(new {
+        Message = "Tag successfully deleted.",
+        Target = tagId
+      });
     }
 
     [HttpPatch("{tagId}")]
     public async Task<IActionResult> UpdateTag([FromRoute] string tagId, [FromBody] PatchTagRequest body) {
-      if (!Guid.TryParse(tagId, out var tagGuid))
+      if (!Guid.TryParse(tagId, out var tagGuid)) {
         throw new BadRequestException(
           Message: "Could not parse given string into a valid guid.",
           Target: tagId
         );
+      }
 
-      var tag = await _service.UpdateTagProperties(tagGuid, body);
+      var tag = await database.Tags.FindAsync(tagGuid) ??
+        throw new NotFoundException(
+          Message: "Could not find tag entry.",
+          Target: tagGuid.ToString()
+        );
+
+      if (!string.IsNullOrEmpty(body.Name)) tag.Name = body.Name.Trim();
+      if (!string.IsNullOrEmpty(body.Description)) tag.Description = body.Description.Trim();
+
+      await database.SaveChangesAsync();
+
       return base.Ok(new { tag.Name, tag.Description });
     }
   }

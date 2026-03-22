@@ -1,7 +1,6 @@
-using AudioArchive.Shared;
 using Microsoft.AspNetCore.Diagnostics;
 
-namespace AudioArchive.Middlewares
+namespace AudioArchive.Shared
 {
   public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> _logger) : IExceptionHandler
   {

@@ -21,7 +21,10 @@ namespace AudioArchive.Controllers
           p.CreatedAt,
           Audios = p.Audios != null ? p.Audios.Select(a => a.Id) : null,
         }).ToListAsync();
-      return Ok(playlists);
+      return Ok(new {
+        playlists.Count,
+        Data = playlists,
+      });
     }
 
     [HttpGet("{playlistId}")]
@@ -73,7 +76,6 @@ namespace AudioArchive.Controllers
           Message: "Could not parse given string into a valid guid.",
           Target: playlistId
         );
-
 
       var playlist = await _database.Playlists.FindAsync(playlistGuid) ??
         throw new NotFoundException(
@@ -129,7 +131,12 @@ namespace AudioArchive.Controllers
       }
 
       await _database.SaveChangesAsync();
-      return base.Ok(new { addedAudios, removedAudios });
+      return base.Ok(new {
+        playlist.Id,
+        playlist.Name,
+        playlist.CreatedAt,
+        Audios = playlist.Audios?.Select(a => a.Id),
+      });
     }
   }
 }

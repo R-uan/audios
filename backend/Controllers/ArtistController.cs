@@ -15,7 +15,6 @@ namespace AudioArchive.Controllers
     [HttpGet]
     public async Task<IActionResult> GetArtists() {
       var cachingKey = $"getArtist:all";
-
       var artists = await _caching.GetValueAsync<List<Artist>>(cachingKey);
 
       if (artists == null) {
@@ -85,6 +84,30 @@ namespace AudioArchive.Controllers
 
       await database.SaveChangesAsync();
       return Ok(artist);
+    }
+
+    [HttpDelete("{artistId}")]
+    public async Task<IActionResult> DeleteArtist([FromRoute] string artistId) {
+      if (!Guid.TryParse(artistId, out var artistGuid)) {
+        throw new BadRequestException(
+          Message: "Could not parse given string into a valid guid.",
+          Target: artistId
+        );
+      }
+
+      var artist = await database.Artists.FindAsync(artistGuid) ??
+        throw new NotFoundException(
+          Message: "Could not find artist entry.",
+          Target: artistId
+        );
+
+      database.Remove(artist);
+      await database.SaveChangesAsync();
+
+      return base.Ok(new {
+        Message = "Artist successfully deleted.",
+        Target = artistId
+      });
     }
   }
 }

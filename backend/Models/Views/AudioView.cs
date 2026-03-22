@@ -1,6 +1,6 @@
 using AudioArchive.Database.Entity;
 
-namespace AudioArchive.Models
+namespace AudioArchive.Models.Views
 {
   public class AudioView
   {
@@ -25,4 +25,5 @@ namespace AudioArchive.Models
       };
     }
   }
+
 }

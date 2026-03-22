@@ -1,4 +1,5 @@
 using AudioArchive.Models;
+using AudioArchive.Models.Views;
 using AudioArchive.Services;
 using AudioArchive.Database;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +21,7 @@ namespace AudioArchive.Controllers
 
     [HttpGet]
     public async Task<IActionResult> GetAudios() {
-      var cachingKey = $"get_audio:all";
+      var cachingKey = "audio:all";
       var audios = await _caching.GetValueAsync<List<AudioView>>(cachingKey);
 
       if (audios == null) {
@@ -48,10 +49,6 @@ namespace AudioArchive.Controllers
         Data = audios,
       });
     }
-
-    [HttpGet("tags")]
-    public async Task<IActionResult> GetAudioTags() =>
-      base.Ok(await _database.Tags.Select(t => t.Name).ToListAsync());
 
     [HttpGet("{audioId}")]
     public async Task<IActionResult> GetAudio([FromRoute] string audioId) {
@@ -97,6 +94,7 @@ namespace AudioArchive.Controllers
         }
       }
 
+      await _caching.DeleteCache("audio:all");
       return base.Ok(new {
         SavedAudios = savedAudios,
         FailedAdditions = failedAdditions,
@@ -121,13 +119,17 @@ namespace AudioArchive.Controllers
       _database.Audios.Remove(audio);
       await _database.SaveChangesAsync();
 
-      return Ok(new { Success = true, Target = audioId });
+      await _caching.DeleteCache("audio:all");
+      return Ok(new {
+        Message = "Audio successfully deleted.",
+        Target = audioId
+      });
     }
 
     [HttpGet("q")]
     public async Task<IActionResult> QueryAudios([FromQuery] AudioSearchParams parameters) {
       var requestPath = HttpContext.Request.GetDisplayUrl();
-      var cachingKey = $"queryAudio:{requestPath}";
+      var cachingKey = $"audio:{requestPath}";
       var audios = await _caching.GetValueAsync<List<Audio>>(cachingKey);
 
       if (audios == null) {
@@ -136,6 +138,7 @@ namespace AudioArchive.Controllers
       }
 
       var audiosViews = audios.Select(AudioView.From).ToList();
+
       return base.Ok(new {
         audiosViews.Count,
         Data = audiosViews
@@ -145,10 +148,10 @@ namespace AudioArchive.Controllers
     [HttpPatch("{audioId}")]
     public async Task<IActionResult>
       PatchAudio([FromRoute] Guid audioId, [FromBody] PatchAudioRequest request) {
-      var cachingKey = "get_audio:all";
       var operation = await _service.UpdateAudio(audioId, request);
       var audioView = AudioView.From(operation);
-      await _caching.DeleteCache(cachingKey);
+
+      await _caching.DeleteCache("audio:all");
       return base.Ok(audioView);
     }
   }
