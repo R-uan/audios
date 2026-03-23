@@ -8,6 +8,7 @@ import {
 import { IPlaylist } from "../models/IPlaylist";
 import { useNoticeContext } from "./NoticeContext";
 import { PlaylistRequests } from "../shared/PlaylistRequests";
+import { isRequestError } from "../shared/shared";
 
 interface PlaylistContextType {
   playlists: Map<string, IPlaylist>;
@@ -34,7 +35,7 @@ export function PlaylistContextProvider({ children }: { children: ReactNode }) {
     if (processing) return;
 
     const response = await PlaylistRequests.PostPlaylist(data);
-    if (PlaylistRequests.isRequestError(response)) {
+    if (isRequestError(response)) {
       noticeContext.sendNotice({
         id: `create-playlist-${data.name}`,
         success: false,
@@ -59,7 +60,7 @@ export function PlaylistContextProvider({ children }: { children: ReactNode }) {
 
   async function removePlaylist(id: string) {
     const response = await PlaylistRequests.DeletePlaylist(id);
-    if (PlaylistRequests.isRequestError(response)) {
+    if (isRequestError(response)) {
       noticeContext.sendNotice({
         id: `create-playlist-${id}`,
         success: false,
@@ -82,12 +83,12 @@ export function PlaylistContextProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const setCurrentPlaylist = (id: string | null) => {
+  function setCurrentPlaylist(id: string | null) {
     if (id != null) {
       const playlist = playlists.get(id);
       if (playlist) setCurrent(playlist);
     } else setCurrent(null);
-  };
+  }
 
   useEffect(() => {
     async function fetchPlaylists() {
@@ -140,6 +141,7 @@ export function PlaylistContextProvider({ children }: { children: ReactNode }) {
 
 export function usePlaylistContext() {
   const context = useContext(PlaylistContext);
-  if (context == undefined) throw new Error("yak playlist context");
+  if (context == undefined)
+    throw new Error("PlaylistContext used outside of provider.");
   return context;
 }

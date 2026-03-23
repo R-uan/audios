@@ -1,14 +1,15 @@
 import { IPlaylist } from "../models/IPlaylist";
 import { IRequestError } from "../models/IRequestError";
 
-const API_URL = "http://localhost:5123/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export class PlaylistRequests {
   public static async GetPlaylists(): Promise<IPlaylist[] | null> {
     const request = await fetch(`${API_URL}/playlist`);
     if (!request.ok) return null;
-    const playlists: IPlaylist[] = await request.json();
-    return playlists;
+    const playlists: { data: IPlaylist[]; count: number } =
+      await request.json();
+    return playlists.data;
   }
 
   public static async DeletePlaylist(
@@ -32,7 +33,7 @@ export class PlaylistRequests {
     name: string;
     audios: string[] | null;
   }): Promise<IPlaylist | IRequestError> {
-    const request = await fetch("http://localhost:5123/api/playlist", {
+    const request = await fetch(`${API_URL}/playlist`, {
       method: "POST",
       body: JSON.stringify(data),
       headers: { "Content-Type": "application/json" },

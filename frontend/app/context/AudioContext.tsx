@@ -121,6 +121,7 @@ export function AudioContextProvider({ children }: { children: ReactNode }) {
 
 export function useAudioContext() {
   const context = useContext(AudioContext);
-  if (context == null) throw new Error("Audio context used outside provider");
+  if (context == undefined)
+    throw new Error("Audio context used outside provider.");
   return context;
 }

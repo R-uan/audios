@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useAudioContext } from "../context/AudioContext";
 import { useQueueContext } from "../context/QueueContext";
 import { usePlaylistContext } from "../context/PlaylistContext";
-import { useFilters } from "../context/AudioFilterContext";
+import { useFilterContext } from "../context/AudioFilterContext";
 import { useContextMenu } from "../components/ContextMenu";
 import { IAudio, IUpdateAudio } from "../models/IAudio";
 
@@ -10,7 +10,7 @@ export function useAudioCatalog() {
   const audioContext = useAudioContext();
   const queueContext = useQueueContext();
   const playlistContext = usePlaylistContext();
-  const { filters } = useFilters();
+  const { filters } = useFilterContext();
 
   const [editingAudio, setEditingAudio] = useState<IAudio | null>(null);
 

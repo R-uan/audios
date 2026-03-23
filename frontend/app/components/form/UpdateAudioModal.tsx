@@ -124,6 +124,14 @@ export function UpdateAudioForm({
               placeholder="https://..."
             />
           </Field>
+          <Field label="Source">
+            <input
+              value={form.source}
+              onChange={(e) => set("source", e.target.value)}
+              className={inputCls}
+              placeholder="Audio source URL or path"
+            />
+          </Field>
         </div>
 
         <hr className="border-zinc-800" />

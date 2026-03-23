@@ -1,14 +1,13 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
-  useFilters,
+  useFilterContext,
   defaultFilters,
-  AudioFilters,
 } from "../context/AudioFilterContext";
 import { useAudioContext } from "../context/AudioContext";
 import { createPortal } from "react-dom";
 
 export function AudioFilter() {
-  const { filters, setFilters, set } = useFilters();
+  const { filters, setFilters, set } = useFilterContext();
   const audioContext = useAudioContext();
   const [includeInput, setIncludeInput] = useState("");
   const [excludeInput, setExcludeInput] = useState("");

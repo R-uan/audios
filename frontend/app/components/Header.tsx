@@ -1,5 +1,3 @@
-"use client";
-
 import { CreateSGAudioForm } from "./form/CreateSGAudioForm";
 import { CreateAudioForm } from "./form/CreateAudioForm";
 

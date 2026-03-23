@@ -1,5 +1,5 @@
 # Container Image
-FROM oven/bun:latest
+FROM oven/bun:alpine
 
 # Set the working directory inside the container
 WORKDIR /app

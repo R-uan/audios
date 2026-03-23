@@ -1,4 +1,5 @@
 node_modules/
+.nix-shell/
 .git/
 .gitignore
 .env/

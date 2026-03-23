@@ -12,12 +12,12 @@ export function NoticeProvider({ children }: { children: ReactNode }) {
   const [notices, setNotice] = useState<INotice[]>([]);
 
   async function sendNotice(notice: INotice) {
-    console.log("New notice");
     setNotice((prev) => [...prev, notice]);
     setTimeout(() => {
       setNotice((prev) => prev.filter((n) => n.id !== notice.id));
     }, 5000);
   }
+
   return (
     <NoticeContext.Provider value={{ notices, sendNotice }}>
       {children}
@@ -27,6 +27,7 @@ export function NoticeProvider({ children }: { children: ReactNode }) {
 
 export function useNoticeContext() {
   const context = useContext(NoticeContext);
-  if (context == undefined) throw new Error("Notice context");
+  if (context == undefined)
+    throw new Error("NoticeContext used outside of provider.");
   return context;
 }

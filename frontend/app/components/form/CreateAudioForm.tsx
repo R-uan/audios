@@ -1,7 +1,6 @@
 import { IPostAudio } from "@/app/models/IAudio";
 import React, { ReactNode, useState } from "react";
 import { Modal } from "../Modal";
-import { AudioRequest } from "@/app/shared/AudioRequests";
 import { useAudioContext } from "@/app/context/AudioContext";
 import { getAudioDuration } from "@/app/helpers/getAudioDuration";
 

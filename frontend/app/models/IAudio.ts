@@ -3,6 +3,7 @@ export interface IAudio {
   title: string;
   artist: string;
   link: string;
+  local: boolean;
   source: string;
   addedAt: string;
   metadata: {

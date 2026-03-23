@@ -1,7 +1,7 @@
 import { IAudio, IPostAudio, IUpdateAudio } from "../models/IAudio";
 import { IRequestError } from "../models/IRequestError";
 
-const API_URL = "http://localhost:5123/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export class AudioRequest {
   public static async All(): Promise<IAudio[] | null> {

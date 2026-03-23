@@ -9,11 +9,13 @@ import { IAudio } from "../models/IAudio";
 import { IPlaylist } from "../models/IPlaylist";
 import { useAudioContext } from "./AudioContext";
 import { useNoticeContext } from "./NoticeContext";
+import { clear } from "console";
 
 interface QueueContextType {
   queue: IAudio[];
   queuePointer: number;
   shuffleQueue: () => void;
+  repeating: boolean;
   playNext: () => void;
   clearQueue: () => void;
   playPrevious: () => void;
@@ -29,6 +31,7 @@ const QueueContext = createContext<QueueContextType | undefined>(undefined);
 export function QueueContextProvider({ children }: { children: ReactNode }) {
   const audioContext = useAudioContext();
   const noticeContext = useNoticeContext();
+
   const [repeat, setRepeat] = useState(false);
   const [queuePointer, setPointer] = useState(-1);
   const [queue, setQueue] = useState<IAudio[]>([]);
@@ -38,13 +41,13 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     if (queueString != null) {
       const audioObjects: IAudio[] = JSON.parse(queueString);
       queueAudio(audioObjects);
-      noticeContext.sendNotice({
-        success: true,
-        title: "Restoing Audio Queue",
-        source: "QueueContextProvider",
-        id: `queue-audio-${Math.random()}`,
-        message: `Restored ${audioObjects.length} audio(s) to the queue.`,
-      });
+      // noticeContext.sendNotice({
+      //   success: true,
+      //   title: "Restoring Audio Queue",
+      //   source: "QueueContextProvider",
+      //   id: `queue-audio-${Math.random()}`,
+      //   message: `Restored ${audioObjects.length} audio(s) to the queue.`,
+      // });
     }
   }, []);
 
@@ -80,6 +83,7 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
   function clearQueue() {
     setQueue([]);
     localStorage.removeItem("queuedAudios");
+    setPointer(-1);
   }
 
   function playNow(audio: IAudio) {
@@ -128,6 +132,10 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
   function playNext() {
     if (queuePointer == queue.length - 1) {
       if (repeat) setPointer(0);
+      else {
+        setPointer(-1);
+        clearQueue();
+      }
       return;
     }
     setPointer(queuePointer + 1);
@@ -144,6 +152,7 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
         queue,
         setQueue, // Add this
         toggleRepeat,
+        repeating: repeat,
         clearQueue,
         shuffleQueue,
         queuePlaylist,
@@ -162,6 +171,6 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
 export function useQueueContext() {
   const context = useContext(QueueContext);
   if (context == undefined)
-    throw new Error("Queue context not used inside provider");
+    throw new Error("QueueContext used outside provider range.");
   return context;
 }

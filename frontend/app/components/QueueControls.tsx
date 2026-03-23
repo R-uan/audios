@@ -6,19 +6,25 @@ import { useAudioCatalog } from "../hooks/useAudioCatalog";
 export function AudioControls() {
   const queueContext = useQueueContext();
   const audioCatalog = useAudioCatalog();
+
   const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState<string>("00:00");
   const [currentPlaying, setCurrent] = useState<IAudio | null>(null);
   const [totalDuration, setTotalDuration] = useState<string>("00:00");
-  const [currentTime, setCurrentTime] = useState<string>("00:00");
+
   const audioPlayerRef = useRef<HTMLAudioElement>(null);
-  const audioPlayer = audioPlayerRef.current;
 
   useEffect(() => {
     const nextAudio = queueContext.queue[queueContext.queuePointer];
     if (nextAudio) {
       setCurrent(nextAudio);
       setCurrentTime("00:00");
-      setTotalDuration("00:00"); // Reset duration when track changes
+    }
+    if (queueContext.queuePointer == -1) {
+      setCurrent(null);
+      setPlaying(false);
+      setCurrentTime("00:00");
+      setTotalDuration("00:00");
     }
   }, [queueContext.queuePointer, queueContext.queue]);
 
@@ -31,11 +37,11 @@ export function AudioControls() {
   }
 
   function handleTogglePlay() {
-    if (audioPlayer) {
+    if (audioPlayerRef.current) {
       if (playing) {
-        audioPlayer.pause();
+        audioPlayerRef.current.pause();
       } else {
-        audioPlayer.play().catch((err) => {
+        audioPlayerRef.current.play().catch((err) => {
           console.error("Playback failed:", err);
           setPlaying(false);
         });
@@ -57,12 +63,12 @@ export function AudioControls() {
   }
 
   function handleMetadata() {
-    if (audioPlayer) {
-      const audioDurationSeconds = audioPlayer.duration;
+    if (audioPlayerRef.current) {
+      const audioDurationSeconds = audioPlayerRef.current.duration;
       if (!isNaN(audioDurationSeconds) && isFinite(audioDurationSeconds)) {
         updateDuration(audioDurationSeconds);
         if (currentPlaying && currentPlaying.metadata.duration == null) {
-          currentPlaying.metadata.duration = Math.floor(audioPlayer.duration);
+          currentPlaying.metadata.duration = Math.floor(audioDurationSeconds);
           audioCatalog.handleUpdateAudio(currentPlaying, [], []);
         }
       }
@@ -70,12 +76,14 @@ export function AudioControls() {
   }
 
   function handleTimeUpdate() {
-    if (audioPlayer && playing) {
-      const audioDuration = audioPlayer.duration;
+    if (audioPlayerRef.current && playing) {
+      const audioDuration = audioPlayerRef.current.duration;
       const formattedTime =
         audioDuration < 3600
-          ? new Date(audioPlayer.currentTime * 1000).toISOString().slice(14, 19)
-          : new Date(audioPlayer.currentTime * 1000)
+          ? new Date(audioPlayerRef.current.currentTime * 1000)
+              .toISOString()
+              .slice(14, 19)
+          : new Date(audioPlayerRef.current.currentTime * 1000)
               .toISOString()
               .slice(11, 19);
 
@@ -162,19 +170,15 @@ export function AudioControls() {
           >
             {playing ? (
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                <rect x="5" y="4" width="4" height="16" rx="1" />
+                <rect x="15" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <svg
-                className="w-4 h-4 translate-x-0.5"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M8 5v14l11-7z" />
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M7 4.5v15l13-7.5z" />
               </svg>
             )}
           </button>
-
           {/* Next */}
           <button
             onClick={handlePlayNext}
@@ -188,11 +192,13 @@ export function AudioControls() {
 
           {/* Repeat */}
           <button
-            className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+            className={`p-1.5 rounded-md transition-colors ${
+              queueContext.repeating
+                ? "text-purple-400 bg-zinc-800"
+                : "text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800"
+            }`}
             title="Repeat"
-            onClick={() => {
-              queueContext.toggleRepeat();
-            }}
+            onClick={() => queueContext.toggleRepeat()}
           >
             <svg
               className="w-4 h-4"
@@ -244,7 +250,11 @@ export function AudioControls() {
             ref={audioPlayerRef}
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
-            src={currentPlaying.source ?? undefined}
+            src={
+              currentPlaying.local
+                ? `${process.env.NEXT_PUBLIC_MEDIA_URL}/${currentPlaying.source}`
+                : (currentPlaying.source ?? undefined)
+            }
             onEnded={handleAudioEnd}
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={handleMetadata}

@@ -65,7 +65,7 @@ export function CreateSGAudioForm() {
 
   async function handleSubmit() {
     if (!isFormValid) return;
-    const request = await fetch("http://localhost:3000/api/sg", {
+    const request = await fetch("/api/sg", {
       method: "POST",
       body: JSON.stringify({ url: form.link.trim() }),
       headers: { "Content-Type": "application/json" },

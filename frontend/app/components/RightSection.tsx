@@ -1,8 +1,8 @@
 import { useQueueContext } from "../context/QueueContext";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { IAudio } from "../models/IAudio";
 import { useContextMenu } from "./ContextMenu";
-import { useFilters } from "../context/AudioFilterContext";
+import { useFilterContext } from "../context/AudioFilterContext";
 
 function TitleTooltip({
   title,
@@ -55,7 +55,7 @@ function TagsRow({ tags }: { tags: string[] }) {
 
 export function RightSection() {
   const queueContext = useQueueContext();
-  const { set } = useFilters();
+  const { set } = useFilterContext();
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -63,11 +63,20 @@ export function RightSection() {
   const { handleRightClick, contextMenu, ContextMenu, closeContextMenu } =
     useContextMenu<IAudio>("right_section");
 
-  const currentAndUpcoming = queueContext.queue.slice(
-    queueContext.queuePointer,
+  const currentAndUpcoming = useMemo(
+    () => queueContext.queue.slice(queueContext.queuePointer),
+    [queueContext.queue, queueContext.queuePointer],
   );
-  const currentSong = currentAndUpcoming[0];
-  const upcomingSongs = currentAndUpcoming.slice(1);
+
+  const currentSong = useMemo(
+    () => currentAndUpcoming[0],
+    [currentAndUpcoming],
+  );
+
+  const upcomingSongs = useMemo(
+    () => currentAndUpcoming.slice(1),
+    [currentAndUpcoming],
+  );
 
   function handleDragStart(index: number) {
     setDraggedIndex(index);
