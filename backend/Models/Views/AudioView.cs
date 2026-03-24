@@ -8,6 +8,7 @@ namespace AudioArchive.Models.Views
     public required string Title { get; set; }
     public required string Artist { get; set; }
 
+    public bool Local { get; set; }
     public string? Link { get; set; }
     public required string Source { get; set; }
     public required DateTime AddedAt { get; set; }
@@ -17,8 +18,9 @@ namespace AudioArchive.Models.Views
       return new AudioView {
         Id = audio.Id,
         Title = audio.Title,
-        Artist = audio.Artist?.Name ?? "Unknown",  // ?. instead of just .
+        Artist = audio.Artist?.Name ?? "Unknown",
         Source = audio.Source,
+        Local = audio.Local,
         Link = audio.Link,
         AddedAt = audio.AddedAt,
         Metadata = AudioMetadataView.From(audio.Metadata)

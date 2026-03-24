@@ -39,7 +39,7 @@ namespace AudioArchive.Services
 
       var audio = Audio.FromRequest(request, artist);
 
-      if (artist.Audios != null && artist.Audios.Any(a => a.Title.Contains(audio.Title))) {
+      if (artist.Audios != null && artist.Audios.Any(a => a.Source.Contains(audio.Source))) {
         throw new DuplicatedAudioException(
           Message: "Attempted to add an already stored audio",
           Target: request.Link
@@ -47,7 +47,7 @@ namespace AudioArchive.Services
       }
 
       if (request.Tags != null) {
-        var audioTags = await this.ProcessTags(request.Tags);
+        var audioTags = await ProcessTags(request.Tags);
         audio.Metadata.Tags = [.. audioTags];
       }
 

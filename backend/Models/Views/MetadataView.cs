@@ -17,7 +17,7 @@ namespace AudioArchive.Models.Views
         Duration = metadata.Duration,
         Mood = metadata.Mood,
         ReleaseYear = metadata.ReleaseYear,
-        Tags = metadata.Tags?.Select(a => a.Name).ToList()
+        Tags = metadata.Tags?.Select(a => a.Name).Order().ToList()
       };
     }
   }

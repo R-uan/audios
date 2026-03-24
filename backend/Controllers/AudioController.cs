@@ -31,6 +31,7 @@ namespace AudioArchive.Controllers
           Artist = audio.Artist.Name,
           Source = audio.Source,
           Link = audio.Link,
+          Local = audio.Local,
           AddedAt = audio.AddedAt,
           Metadata = new AudioMetadataView {
             Duration = audio.Metadata.Duration,
