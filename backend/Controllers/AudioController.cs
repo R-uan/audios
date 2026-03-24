@@ -71,8 +71,10 @@ namespace AudioArchive.Controllers
     }
 
     [HttpPost]
-    public async Task<IActionResult> PostAudio([FromBody] PostAudioRequest request)
-      => base.Ok(AudioView.From(await _service.StoreAudio(request)));
+    public async Task<IActionResult> PostAudio([FromBody] PostAudioRequest request) {
+      Console.WriteLine($"is local: {request.Local}");
+      return base.Ok(AudioView.From(await _service.StoreAudio(request)));
+    }
 
     [HttpPost("bulk")]
     public async Task<IActionResult> PostMultipleAudios([FromBody] List<PostAudioRequest> request) {

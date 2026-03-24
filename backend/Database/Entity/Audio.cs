@@ -38,7 +38,7 @@ namespace AudioArchive.Database.Entity
         Id = audioId,
         Artist = artist,
         AddedAt = DateTime.UtcNow,
-        Local = false,
+        Local = request.Local,
         Link = request.Link,
         Source = request.Source,
         Title = request.Title,

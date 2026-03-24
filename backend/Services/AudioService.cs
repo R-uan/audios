@@ -71,7 +71,10 @@ namespace AudioArchive.Services
       if (!string.IsNullOrEmpty(request.Title)) audio.Title = request.Title;
       if (!string.IsNullOrEmpty(request.Link)) audio.Link = request.Link;
       if (!string.IsNullOrEmpty(request.Source)) audio.Source = request.Source;
-      if (request.Local.HasValue) audio.Local = request.Local.Value;
+      if (request.Local.HasValue) {
+        Console.WriteLine($"The local value id {request.Local.Value}: {request.Local.Value.ToString()}");
+        audio.Local = request.Local.Value;
+      }
 
       if (!string.IsNullOrEmpty(request.Artist)) {
         var artist = await database.Artists
