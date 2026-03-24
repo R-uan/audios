@@ -76,19 +76,23 @@ export function CreateAudioForm() {
   async function handleSubmit() {
     if (!isValid) return;
 
+    // Snapshot form state before any await — prevents stale closure issues
+    const snapshot = { ...form };
+
     const newAudio: IPostAudio = {
-      tags: form.tags,
-      local: form.local,
-      link: form.link.trim(),
-      title: form.title.trim(),
-      artist: form.artist.trim(),
-      source: form.source.trim(),
-      mood: form.mood.trim() || null,
-      genrer: form.genrer.trim() || null,
-      duration: await getAudioDuration(form.source.trim()),
-      releaseYear: form.releaseYear ? parseInt(form.releaseYear) : null,
+      tags: snapshot.tags,
+      local: snapshot.local,
+      link: snapshot.link.trim(),
+      title: snapshot.title.trim(),
+      artist: snapshot.artist.trim(),
+      source: snapshot.source.trim(),
+      mood: snapshot.mood.trim() || null,
+      genrer: snapshot.genrer.trim() || null,
+      duration: await getAudioDuration(snapshot.source.trim()),
+      releaseYear: snapshot.releaseYear ? parseInt(snapshot.releaseYear) : null,
     };
 
+    console.log(newAudio);
     await audioContext.addNewAudio(newAudio);
     setIsOpen(false);
     setForm(defaultForm);
@@ -211,7 +215,9 @@ export function CreateAudioForm() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => set("local", !form.local)}
+                  onClick={() =>
+                    setForm((prev) => ({ ...prev, local: !prev.local }))
+                  }
                   className={`relative w-9 h-5 rounded-full transition-colors ${form.local ? "bg-purple-600" : "bg-zinc-600"}`}
                 >
                   <span
