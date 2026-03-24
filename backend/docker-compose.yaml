@@ -1,38 +1,44 @@
 services:
-  audio_archive_cache:
+  redis:
     image: redis:7-alpine
-    container_name: audio_archive_cache 
     restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+    container_name: aa_dev_redis 
     command: redis-server --appendonly yes
 
-  audio_catalog_database:
-    image: postgres 
-    container_name: media_catalog
+    ports:
+      - "6375:6379"
+    
+    volumes:
+      - aa_dev_redis_volume:/data
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    container_name: aa_dev_postgres
+
     environment:
-      POSTGRES_DB: media_catalog
+      POSTGRES_DB: aa_dev
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    
     ports:
-      - "5432:5432"
+      - "5435:5432"
+    
     volumes:
-      - /mnt/hdd/docker_volumes/pgsql:/var/lib/postgresql
+      - aa_dev_postgres_volume:/var/lib/postgresql/data
+    
     deploy:
       resources:
         limits:
           cpus: "1"
           memory: 1G
+    
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-    restart: unless-stopped
-
 volumes:
-  pgsql:
-  redis_data:
+  aa_dev_redis_volume:
+  aa_dev_postgres_volume:

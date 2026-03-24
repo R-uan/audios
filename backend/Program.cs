@@ -18,12 +18,12 @@ builder.Services.AddScoped<ICachingService, CachingService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddDbContext<AudioDatabaseContext>(options => {
-  var connectionString = builder.Configuration.GetConnectionString("PostgresDb1");
+  var connectionString = builder.Configuration.GetConnectionString("Postgres");
   options.UseNpgsql(connectionString);
 });
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => {
-  var connectionString = builder.Configuration.GetConnectionString("RedisDatabase")
+  var connectionString = builder.Configuration.GetConnectionString("Redis")
    ?? throw new MissingFieldException("Redis database connection string could not be found");
   var configuration = ConfigurationOptions.Parse(connectionString);
   return ConnectionMultiplexer.Connect(configuration);
@@ -60,6 +60,11 @@ app.UseDirectoryBrowser(new DirectoryBrowserOptions {
   FileProvider = fileProvider,
   RequestPath = "/media/audio"
 });
+
+// Comment this if you have a backup
+// using var scope = app.Services.CreateScope();
+// var db = scope.ServiceProvider.GetRequiredService<AudioDatabaseContext>();
+// db.Database.Migrate();
 
 app.UseExceptionHandler();
 app.UseCors("AllowAll");
