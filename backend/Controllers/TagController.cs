@@ -18,7 +18,7 @@ namespace AudioArchive.Controllers
           t.Name,
           t.Description,
           AudioCount = t.AudioMetadatas == null ? 0 : t.AudioMetadatas.Count
-        }).ToListAsync();
+        }).OrderBy(t => t.Name).ToListAsync();
       return base.Ok(
         new {
           tags.Count,

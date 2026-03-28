@@ -4,7 +4,7 @@ namespace AudioArchive.Models
   {
     public required string Title { get; set; }
     public required string Artist { get; set; }
-    public required string Link { get; set; }
+    public string? Link { get; set; }
     public required string Source { get; set; }
     public required bool Local { get; set; }
     // Metadata

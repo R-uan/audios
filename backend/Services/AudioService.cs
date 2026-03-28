@@ -11,10 +11,8 @@ namespace AudioArchive.Services
   {
     public async Task<List<Tag>> ProcessTags(List<string> targetTags) {
       var existingTags = await database.Tags.Where(t => targetTags.Contains(t.Name)).ToListAsync();
-      var newTags = targetTags.Where(t => !existingTags.Exists(tag => tag.Name == t)).Select(t => new Tag {
-        Id = Guid.NewGuid(),
-        Name = t
-      }).ToList();
+      var newTags = targetTags.Where(t => !existingTags.Exists(tag => string.Equals(tag.Name, t)))
+        .Select(t => new Tag(t)).ToList();
 
       if (newTags.Count != 0) {
         await database.Tags.AddRangeAsync(newTags);
@@ -42,7 +40,7 @@ namespace AudioArchive.Services
       if (artist.Audios != null && artist.Audios.Any(a => a.Source.Contains(audio.Source))) {
         throw new DuplicatedAudioException(
           Message: "Attempted to add an already stored audio",
-          Target: request.Link
+          Target: request.Link ?? request.Source
         );
       }
 
@@ -71,10 +69,7 @@ namespace AudioArchive.Services
       if (!string.IsNullOrEmpty(request.Title)) audio.Title = request.Title;
       if (!string.IsNullOrEmpty(request.Link)) audio.Link = request.Link;
       if (!string.IsNullOrEmpty(request.Source)) audio.Source = request.Source;
-      if (request.Local.HasValue) {
-        Console.WriteLine($"The local value id {request.Local.Value}: {request.Local.Value.ToString()}");
-        audio.Local = request.Local.Value;
-      }
+      if (request.Local.HasValue) audio.Local = request.Local.Value;
 
       if (!string.IsNullOrEmpty(request.Artist)) {
         var artist = await database.Artists
@@ -100,25 +95,8 @@ namespace AudioArchive.Services
       if (request.ReleaseYear.HasValue) audio.Metadata.ReleaseYear = request.ReleaseYear.Value;
 
       if (request.AddTags != null && request.AddTags.Count > 0) {
-        var tags = await database.Tags
-          .Where(t => request.AddTags.Contains(t.Name))
-          .ToDictionaryAsync(t => t.Name);
-
-        var newTags = request.AddTags
-          .Where(t => !tags.ContainsKey(t))
-          .Select(t => new Tag { Name = t, Id = Guid.NewGuid() })
-          .ToList();
-
-        if (newTags.Count > 0) {
-          await database.Tags.AddRangeAsync(newTags);
-          foreach (var tag in newTags) {
-            tags.Add(tag.Name, tag);
-          }
-        }
-
-        if (tags.Count > 0 && request.AddTags.Count > 0) {
-          (audio.Metadata.Tags ??= []).AddRange(request.AddTags.Select(t => tags[t]));
-        }
+        var tags = await ProcessTags(request.AddTags);
+        (audio.Metadata.Tags ??= []).AddRange(tags);
       }
 
       if (request.RemoveTags != null && request.RemoveTags.Count > 0) {

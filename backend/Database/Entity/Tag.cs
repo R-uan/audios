@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace AudioArchive.Database.Entity
@@ -10,5 +11,12 @@ namespace AudioArchive.Database.Entity
 
     [JsonIgnore]
     public List<AudioMetadata>? AudioMetadatas { get; set; }
+
+    [SetsRequiredMembers]
+    public Tag(string name) {
+      Name = string.Join(" ", name.Split(" ").Select(s => char.ToUpper(s[0]) + s[1..]));
+    }
+
+    protected Tag() { }
   }
 }

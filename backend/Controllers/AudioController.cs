@@ -88,10 +88,10 @@ namespace AudioArchive.Controllers
           savedAudios.Add(AudioView.From(audio));
         } catch (Exception e) {
           if (e is DuplicatedAudioException) {
-            duplicatedAudios.Add(entry.Link);
+            duplicatedAudios.Add(entry.Link ?? entry.Source);
             continue;
           } else {
-            failedAdditions.Add(entry.Link);
+            duplicatedAudios.Add(entry.Link ?? entry.Source);
             continue;
           }
         }
@@ -107,7 +107,7 @@ namespace AudioArchive.Controllers
 
     [HttpDelete("{audioId}")]
     public async Task<IActionResult> DeleteAudio([FromRoute] string audioId) {
-      if (Guid.TryParse(audioId, out var audioGuid))
+      if (!Guid.TryParse(audioId, out var audioGuid))
         throw new BadRequestException(
           Message: "Could not parse given string into a valid guid.",
           Target: audioId
