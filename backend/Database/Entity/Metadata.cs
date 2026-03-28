@@ -6,10 +6,10 @@ namespace AudioArchive.Database.Entity
   {
     public required Guid Id { get; set; }
     public required Guid AudioId { get; set; }
-    public int? ReleaseYear { get; set; }
-    public string? Genrer { get; set; }
+
+    public string? Genre { get; set; }
     public int? Duration { get; set; }
-    public string? Mood { get; set; }
+    public int? ReleaseYear { get; set; }
 
     public required List<Tag> Tags { get; set; }
 

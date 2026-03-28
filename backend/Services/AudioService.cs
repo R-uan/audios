@@ -89,9 +89,8 @@ namespace AudioArchive.Services
         audio.ArtistId = artist.Id;
       }
 
-      if (!string.IsNullOrEmpty(request.Mood)) audio.Metadata.Mood = request.Mood;
       if (request.Duration.HasValue) audio.Metadata.Duration = request.Duration.Value;
-      if (!string.IsNullOrEmpty(request.Genrer)) audio.Metadata.Genrer = request.Genrer;
+      if (!string.IsNullOrEmpty(request.Genrer)) audio.Metadata.Genre = request.Genrer;
       if (request.ReleaseYear.HasValue) audio.Metadata.ReleaseYear = request.ReleaseYear.Value;
 
       if (request.AddTags != null && request.AddTags.Count > 0) {

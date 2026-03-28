@@ -28,8 +28,7 @@ namespace AudioArchive.Database.Entity
         Id = Guid.NewGuid(),
         Duration = request.Duration,
         AudioId = audioId,
-        Genrer = request.Genrer,
-        Mood = request.Mood,
+        Genre = request.Genrer,
         ReleaseYear = request.ReleaseYear,
         Tags = []
       };

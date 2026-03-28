@@ -33,10 +33,14 @@ namespace AudioArchive.Database
 
       modelBuilder.Entity<AudioMetadata>(metadata => {
         metadata.ToTable("audio_metadata");
+        metadata.HasIndex(am => am.AudioId);
         metadata.HasKey(m => m.Id);
         metadata.HasMany(m => m.Tags)
                 .WithMany(t => t.AudioMetadatas)
-                .UsingEntity(j => j.ToTable("audio_metadata_tags")); // Optional: custom join table name
+                .UsingEntity(j => {
+                  j.ToTable("audio_metadata_tags");
+                  j.HasIndex("TagsId");
+                });
       });
 
       modelBuilder.Entity<Tag>(tag => {

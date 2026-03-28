@@ -13,11 +13,11 @@ namespace AudioArchive.Controllers
     [HttpGet]
     public async Task<IActionResult> GetTags() {
       var tags = await database.Tags
-        .Include(t => t.AudioMetadatas)
         .Select(t => new {
+          t.Id,
           t.Name,
           t.Description,
-          AudioCount = t.AudioMetadatas == null ? 0 : t.AudioMetadatas.Count
+          AudioCount = t.AudioMetadatas == null ? 0 : t.AudioMetadatas.Count,
         }).OrderBy(t => t.Name).ToListAsync();
       return base.Ok(
         new {
