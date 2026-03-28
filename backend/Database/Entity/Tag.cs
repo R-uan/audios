@@ -14,7 +14,7 @@ namespace AudioArchive.Database.Entity
 
     [SetsRequiredMembers]
     public Tag(string name) {
-      Name = string.Join(" ", name.Split(" ").Select(s => char.ToUpper(s[0]) + s[1..]));
+      Name = string.Join(" ", name.ToLower().Split(" ").Select(s => char.ToUpper(s[0]) + s[1..]));
     }
 
     protected Tag() { }
