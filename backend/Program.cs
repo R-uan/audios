@@ -12,9 +12,9 @@ builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 // Services
+builder.Services.AddHostedService<TagCleanupService>();
 builder.Services.AddScoped<IAudioService, AudioService>();
 builder.Services.AddScoped<ICachingService, CachingService>();
-
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddDbContext<AudioDatabaseContext>(options => {
