@@ -10,8 +10,10 @@ namespace AudioArchive.Services
   public class AudioService(AudioDatabaseContext database) : IAudioService
   {
     public async Task<List<Tag>> ProcessTags(List<string> targetTags) {
-      var existingTags = await database.Tags.Where(t => targetTags.Contains(t.Name)).ToListAsync();
-      var newTags = targetTags.Where(t => !existingTags.Exists(tag => string.Equals(tag.Name, t)))
+      var lowerTargetTags = targetTags.Select(t => t.ToLower()).ToList();
+      var existingTags = await database.Tags.Where(t => lowerTargetTags.Contains(t.Name.ToLower()))
+        .ToListAsync();
+      var newTags = lowerTargetTags.Where(t => !existingTags.Exists(tag => tag.Name.ToLower() == t))
         .Select(t => new Tag(t)).ToList();
 
       if (newTags.Count != 0) {
