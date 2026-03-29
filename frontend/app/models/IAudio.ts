@@ -18,13 +18,12 @@ export interface IAudio {
 export interface IPostAudio {
   title: string;
   artist: string;
-  link: string;
+  link: string | null;
   source: string;
   local: boolean;
   releaseYear: number | null;
   genrer: string | null;
   duration: number | null;
-  mood: string | null;
   tags: string[];
 }
 

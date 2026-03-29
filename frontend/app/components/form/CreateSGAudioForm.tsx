@@ -1,7 +1,6 @@
+import { Modal } from "../Modal";
 import { IPostAudio } from "@/app/models/IAudio";
 import React, { ReactNode, useState } from "react";
-import { Modal } from "../Modal";
-import { AudioRequest } from "@/app/shared/AudioRequests";
 import { useAudioContext } from "@/app/context/AudioContext";
 import { getAudioDuration } from "@/app/helpers/getAudioDuration";
 
@@ -9,7 +8,6 @@ interface SGForm {
   link: string;
   releaseYear: string;
   genrer: string;
-  mood: string;
   tags: string[];
 }
 
@@ -17,7 +15,6 @@ const defaultSGForm: SGForm = {
   link: "",
   releaseYear: "",
   genrer: "",
-  mood: "",
   tags: [],
 };
 
@@ -82,7 +79,6 @@ export function CreateSGAudioForm() {
         link: url,
         local: false,
         tags: form.tags,
-        mood: form.mood,
         duration: duration,
         genrer: form.genrer,
         releaseYear: form.releaseYear ? parseInt(form.releaseYear) : null,
@@ -155,6 +151,7 @@ export function CreateSGAudioForm() {
                 onChange={(e) => setSGForm("link", e.target.value)}
                 placeholder="https://..."
                 className={inputCls}
+                required
               />
             </Field>
 
@@ -179,14 +176,6 @@ export function CreateSGAudioForm() {
                     value={form.genrer}
                     onChange={(e) => setSGForm("genrer", e.target.value)}
                     placeholder="e.g. Jazz"
-                    className={inputCls}
-                  />
-                </Field>
-                <Field label="Mood" className="col-span-2">
-                  <input
-                    value={form.mood}
-                    onChange={(e) => setSGForm("mood", e.target.value)}
-                    placeholder="e.g. Chill"
                     className={inputCls}
                   />
                 </Field>

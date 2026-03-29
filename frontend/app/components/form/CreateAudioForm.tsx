@@ -12,7 +12,6 @@ interface AddAudioForm {
   local: boolean;
   releaseYear: string;
   genrer: string;
-  mood: string;
   tags: string[];
 }
 
@@ -24,7 +23,6 @@ const defaultForm: AddAudioForm = {
   local: false,
   releaseYear: "",
   genrer: "",
-  mood: "",
   tags: [],
 };
 
@@ -37,7 +35,6 @@ export function CreateAudioForm() {
   const isValid =
     form.title.trim() &&
     form.artist.trim() &&
-    form.link.trim() &&
     form.source.trim();
 
   function set<K extends keyof AddAudioForm>(key: K, value: AddAudioForm[K]) {
@@ -82,17 +79,15 @@ export function CreateAudioForm() {
     const newAudio: IPostAudio = {
       tags: snapshot.tags,
       local: snapshot.local,
-      link: snapshot.link.trim(),
       title: snapshot.title.trim(),
       artist: snapshot.artist.trim(),
       source: snapshot.source.trim(),
-      mood: snapshot.mood.trim() || null,
+      link: snapshot.link.trim() || null,
       genrer: snapshot.genrer.trim() || null,
       duration: await getAudioDuration(snapshot.source.trim()),
       releaseYear: snapshot.releaseYear ? parseInt(snapshot.releaseYear) : null,
     };
 
-    console.log(newAudio);
     await audioContext.addNewAudio(newAudio);
     setIsOpen(false);
     setForm(defaultForm);
@@ -179,7 +174,7 @@ export function CreateAudioForm() {
               <Field
                 label={
                   <>
-                    Link <Required />
+                    Link
                   </>
                 }
               >
@@ -249,14 +244,6 @@ export function CreateAudioForm() {
                     value={form.genrer}
                     onChange={(e) => set("genrer", e.target.value)}
                     placeholder="e.g. Jazz"
-                    className={inputCls}
-                  />
-                </Field>
-                <Field label="Mood" className="col-span-2">
-                  <input
-                    value={form.mood}
-                    onChange={(e) => set("mood", e.target.value)}
-                    placeholder="e.g. Chill"
                     className={inputCls}
                   />
                 </Field>
