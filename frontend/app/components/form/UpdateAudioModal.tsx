@@ -166,30 +166,6 @@ export function UpdateAudioForm({
                 placeholder="e.g. Jazz"
               />
             </Field>
-
-            <Field label="Mood">
-              <input
-                value={form.metadata.mood ?? ""}
-                onChange={(e) => setMeta("mood", e.target.value || null)}
-                className={inputCls}
-                placeholder="e.g. Chill"
-              />
-            </Field>
-
-            <Field label="Duration (s)">
-              <input
-                type="number"
-                value={form.metadata.duration ?? ""}
-                onChange={(e) =>
-                  setMeta(
-                    "duration",
-                    e.target.value ? parseFloat(e.target.value) : null,
-                  )
-                }
-                className={inputCls}
-                placeholder="213"
-              />
-            </Field>
           </div>
 
           {/* Tags */}
