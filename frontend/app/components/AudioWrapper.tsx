@@ -7,14 +7,13 @@ export const AudioWrapper = memo(
     onContextMenuHandler,
   }: {
     audio: IAudio;
-    onContextMenuHandler: (e: MouseEvent, audio: IAudio) => void;
+    onContextMenuHandler: (e: React.MouseEvent, audio: IAudio) => void;
   }) => {
     function secondsToMinutes(seconds: number) {
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = seconds % 60;
       return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
     }
-
     return (
       <li
         key={audio.id}
@@ -32,7 +31,6 @@ export const AudioWrapper = memo(
             {audio.artist}
           </span>
         </div>
-
         {/* Tags */}
         <div className="flex flex-1 flex-wrap gap-1.5 min-w-0">
           {audio.metadata.tags.map((t) => (
@@ -44,7 +42,6 @@ export const AudioWrapper = memo(
             </span>
           ))}
         </div>
-
         {/* Duration */}
         <span className="text-xs tabular-nums text-zinc-500 group-hover:text-zinc-400 shrink-0 transition-colors">
           {audio.metadata.duration

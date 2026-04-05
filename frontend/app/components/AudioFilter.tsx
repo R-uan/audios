@@ -63,7 +63,7 @@ export function AudioFilter() {
     filters.artist ||
     filters.includeTags.length > 0 ||
     filters.excludeTags.length > 0 ||
-    filters.daysAgo !== null;
+    filters.hoursAgo !== null;
 
   return (
     <div className="space-y-2">
@@ -89,13 +89,13 @@ export function AudioFilter() {
           <span className="text-xs font-medium text-zinc-500">
             Added within
           </span>
-          {filters.daysAgo !== null ? (
+          {filters.hoursAgo !== null ? (
             <div className="flex items-center gap-1.5">
               <span className="text-xs tabular-nums text-purple-400">
-                {filters.daysAgo === 0 ? "today" : `${filters.daysAgo}d`}
+                {filters.hoursAgo === 0 ? "this hour" : `${filters.hoursAgo}h`}
               </span>
               <button
-                onClick={() => set("daysAgo", null)}
+                onClick={() => set("hoursAgo", null)}
                 className="text-zinc-600 hover:text-zinc-300 transition-colors"
               >
                 <svg
@@ -120,15 +120,15 @@ export function AudioFilter() {
         <input
           type="range"
           min={0}
-          max={365}
+          max={168}
           step={1}
-          value={filters.daysAgo ?? 365}
-          onChange={(e) => set("daysAgo", parseInt(e.target.value))}
+          value={filters.hoursAgo ?? 168}
+          onChange={(e) => set("hoursAgo", parseInt(e.target.value))}
           className="w-full h-1 appearance-none rounded-full bg-zinc-700 accent-purple-500 cursor-pointer"
         />
         <div className="flex justify-between mt-1">
-          <span className="text-xs text-zinc-600">today</span>
-          <span className="text-xs text-zinc-600">365d</span>
+          <span className="text-xs text-zinc-600">this hour</span>
+          <span className="text-xs text-zinc-600">168h</span>
         </div>
       </div>
 

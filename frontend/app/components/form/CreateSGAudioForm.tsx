@@ -7,14 +7,14 @@ import { getAudioDuration } from "@/app/helpers/getAudioDuration";
 interface SGForm {
   link: string;
   releaseYear: string;
-  genrer: string;
+  genre: string;
   tags: string[];
 }
 
 const defaultSGForm: SGForm = {
   link: "",
   releaseYear: "",
-  genrer: "",
+  genre: "",
   tags: [],
 };
 
@@ -80,7 +80,7 @@ export function CreateSGAudioForm() {
         local: false,
         tags: form.tags,
         duration: duration,
-        genrer: form.genrer,
+        genre: form.genre,
         releaseYear: form.releaseYear ? parseInt(form.releaseYear) : null,
       };
 
@@ -173,8 +173,8 @@ export function CreateSGAudioForm() {
                 </Field>
                 <Field label="Genre">
                   <input
-                    value={form.genrer}
-                    onChange={(e) => setSGForm("genrer", e.target.value)}
+                    value={form.genre}
+                    onChange={(e) => setSGForm("genre", e.target.value)}
                     placeholder="e.g. Jazz"
                     className={inputCls}
                   />

@@ -8,7 +8,7 @@ export interface IAudio {
   addedAt: string;
   metadata: {
     releaseYear: number | null;
-    genrer: string | null;
+    genre: string | null;
     duration: number | null;
     mood: string | null;
     tags: string[];
@@ -22,7 +22,7 @@ export interface IPostAudio {
   source: string;
   local: boolean;
   releaseYear: number | null;
-  genrer: string | null;
+  genre: string | null;
   duration: number | null;
   tags: string[];
 }
@@ -33,7 +33,7 @@ export interface IUpdateAudio {
   link: string;
   source: string;
   releaseYear: number | null;
-  genrer: string | null;
+  genre: string | null;
   duration: number | null;
   mood: string | null;
   addTags: string[];

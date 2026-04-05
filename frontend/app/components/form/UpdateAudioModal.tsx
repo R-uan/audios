@@ -160,8 +160,8 @@ export function UpdateAudioForm({
 
             <Field label="Genre">
               <input
-                value={form.metadata.genrer ?? ""}
-                onChange={(e) => setMeta("genrer", e.target.value || null)}
+                value={form.metadata.genre ?? ""}
+                onChange={(e) => setMeta("genre", e.target.value || null)}
                 className={inputCls}
                 placeholder="e.g. Jazz"
               />

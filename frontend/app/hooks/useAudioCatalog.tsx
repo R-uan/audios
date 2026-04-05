@@ -32,10 +32,10 @@ export function useAudioCatalog() {
     if (!list) return null;
 
     const cutoff =
-      filters.daysAgo !== null
-        ? filters.daysAgo === 0
-          ? new Date(new Date().setHours(0, 0, 0, 0))
-          : new Date(Date.now() - filters.daysAgo * 86_400_000)
+      filters.hoursAgo !== null
+        ? filters.hoursAgo === 0
+          ? new Date(new Date().setMinutes(0, 0, 0))
+          : new Date(Date.now() - filters.hoursAgo * 3_600_000)
         : null;
 
     return list.filter((a) => {
@@ -88,7 +88,7 @@ export function useAudioCatalog() {
       title: audio.title,
       duration: audio.metadata.duration,
       artist: audio.artist,
-      genrer: audio.metadata.genrer,
+      genre: audio.metadata.genre,
       link: audio.link,
       mood: audio.metadata.mood,
       releaseYear: audio.metadata.releaseYear,
@@ -101,9 +101,8 @@ export function useAudioCatalog() {
     setEditingAudio(null);
   }
 
-  async function handleDeleteAudio() {
-    if (contextMenu == null) return;
-    await audioContext.deleteAudio(contextMenu.data.id);
+  async function handleDeleteAudio(id: string) {
+    await audioContext.deleteAudio(id);
     closeContextMenu();
   }
 

@@ -11,7 +11,7 @@ interface AddAudioForm {
   source: string;
   local: boolean;
   releaseYear: string;
-  genrer: string;
+  genre: string;
   tags: string[];
 }
 
@@ -22,7 +22,7 @@ const defaultForm: AddAudioForm = {
   source: "",
   local: false,
   releaseYear: "",
-  genrer: "",
+  genre: "",
   tags: [],
 };
 
@@ -32,10 +32,7 @@ export function CreateAudioForm() {
   const [tagInput, setTagInput] = useState("");
   const [form, setForm] = useState<AddAudioForm>(defaultForm);
 
-  const isValid =
-    form.title.trim() &&
-    form.artist.trim() &&
-    form.source.trim();
+  const isValid = form.title.trim() && form.artist.trim() && form.source.trim();
 
   function set<K extends keyof AddAudioForm>(key: K, value: AddAudioForm[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -83,7 +80,7 @@ export function CreateAudioForm() {
       artist: snapshot.artist.trim(),
       source: snapshot.source.trim(),
       link: snapshot.link.trim() || null,
-      genrer: snapshot.genrer.trim() || null,
+      genre: snapshot.genre.trim() || null,
       duration: await getAudioDuration(snapshot.source.trim()),
       releaseYear: snapshot.releaseYear ? parseInt(snapshot.releaseYear) : null,
     };
@@ -171,13 +168,7 @@ export function CreateAudioForm() {
                   className={inputCls}
                 />
               </Field>
-              <Field
-                label={
-                  <>
-                    Link
-                  </>
-                }
-              >
+              <Field label={<>Link</>}>
                 <input
                   value={form.link}
                   onChange={(e) => set("link", e.target.value)}
@@ -241,8 +232,8 @@ export function CreateAudioForm() {
                 </Field>
                 <Field label="Genre">
                   <input
-                    value={form.genrer}
-                    onChange={(e) => set("genrer", e.target.value)}
+                    value={form.genre}
+                    onChange={(e) => set("genre", e.target.value)}
                     placeholder="e.g. Jazz"
                     className={inputCls}
                   />
