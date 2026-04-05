@@ -10,7 +10,7 @@ namespace AudioArchive.Services
   public class AudioService(AudioDatabaseContext database) : IAudioService
   {
     public async Task<List<Tag>> ProcessTags(List<string> targetTags) {
-      var lowerTargetTags = targetTags.Select(t => t.ToLower()).ToList();
+      var lowerTargetTags = targetTags.Select(t => t.ToLower().Trim()).ToList();
       var existingTags = await database.Tags.Where(t => lowerTargetTags.Contains(t.Name.ToLower()))
         .ToListAsync();
       var newTags = lowerTargetTags.Where(t => !existingTags.Exists(tag => tag.Name.ToLower() == t))
@@ -68,7 +68,7 @@ namespace AudioArchive.Services
             Target: audioId.ToString()
           );
 
-      if (!string.IsNullOrEmpty(request.Title)) audio.Title = request.Title;
+      if (!string.IsNullOrEmpty(request.Title)) audio.Title = request.Title.Trim();
       if (!string.IsNullOrEmpty(request.Link)) audio.Link = request.Link;
       if (!string.IsNullOrEmpty(request.Source)) audio.Source = request.Source;
       if (request.Local.HasValue) audio.Local = request.Local.Value;
@@ -92,7 +92,7 @@ namespace AudioArchive.Services
       }
 
       if (request.Duration.HasValue) audio.Metadata.Duration = request.Duration.Value;
-      if (!string.IsNullOrEmpty(request.Genrer)) audio.Metadata.Genre = request.Genrer;
+      if (!string.IsNullOrEmpty(request.Genre)) audio.Metadata.Genre = request.Genre.Trim();
       if (request.ReleaseYear.HasValue) audio.Metadata.ReleaseYear = request.ReleaseYear.Value;
 
       if (request.AddTags != null && request.AddTags.Count > 0) {

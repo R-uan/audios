@@ -10,7 +10,7 @@ namespace AudioArchive.Models
     // Metadata
     public string? Mood { get; set; }
     public int? Duration { get; set; }
-    public string? Genrer { get; set; }
+    public string? Genre { get; set; }
     public int? ReleaseYear { get; set; }
     public List<string>? Tags { get; set; }
   }
@@ -25,7 +25,7 @@ namespace AudioArchive.Models
     // Metadata
     public string? Mood { get; set; }
     public int? Duration { get; set; }
-    public string? Genrer { get; set; }
+    public string? Genre { get; set; }
     public int? ReleaseYear { get; set; }
     public List<string>? AddTags { get; set; }
     public List<string>? RemoveTags { get; set; }

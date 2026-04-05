@@ -28,7 +28,7 @@ namespace AudioArchive.Database.Entity
         Id = Guid.NewGuid(),
         Duration = request.Duration,
         AudioId = audioId,
-        Genre = request.Genrer,
+        Genre = request.Genre,
         ReleaseYear = request.ReleaseYear,
         Tags = []
       };
@@ -40,7 +40,7 @@ namespace AudioArchive.Database.Entity
         Local = request.Local,
         Link = request.Link,
         Source = request.Source,
-        Title = request.Title,
+        Title = request.Title.Trim(),
         ArtistId = artist.Id,
         Metadata = metadata
       };
