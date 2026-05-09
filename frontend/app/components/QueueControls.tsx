@@ -19,6 +19,10 @@ export function AudioControls() {
     if (nextAudio) {
       setCurrent(nextAudio);
       setCurrentTime("00:00");
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: nextAudio.title,
+        artist: nextAudio.artist
+      });
     }
     if (queueContext.queuePointer == -1) {
       setCurrent(null);
@@ -114,7 +118,6 @@ export function AudioControls() {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-zinc-100 truncate">
-                {currentPlaying.title}
               </p>
               <p className="text-xs text-zinc-500 truncate">
                 {currentPlaying.artist}
