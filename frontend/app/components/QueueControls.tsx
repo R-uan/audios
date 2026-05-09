@@ -16,12 +16,14 @@ export function AudioControls() {
 
   useEffect(() => {
     const nextAudio = queueContext.queue[queueContext.queuePointer];
+    if (!("mediaSession" in navigator)) return
     if (nextAudio) {
       setCurrent(nextAudio);
       setCurrentTime("00:00");
       navigator.mediaSession.metadata = new MediaMetadata({
         title: nextAudio.title,
-        artist: nextAudio.artist
+        artist: nextAudio.artist,
+        artwork: undefined
       });
     }
     if (queueContext.queuePointer == -1) {
@@ -39,6 +41,30 @@ export function AudioControls() {
         : new Date(audioDurationSeconds * 1000).toISOString().slice(11, 19);
     setTotalDuration(formattedDuration);
   }
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return
+    navigator.mediaSession.setActionHandler("play", () => {
+      audioPlayerRef.current?.play()
+      setPlaying(true)
+    })
+    navigator.mediaSession.setActionHandler("pause", () => {
+      audioPlayerRef.current?.pause()
+      setPlaying(false)
+    })
+  }, [])
+
+  // next/prev — need fresh queueContext
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return
+    navigator.mediaSession.setActionHandler("nexttrack", () => queueContext.playNext())
+    navigator.mediaSession.setActionHandler("previoustrack", () => queueContext.playPrevious())
+  }, [queueContext])
+  
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return
+    navigator.mediaSession.playbackState = playing ? "playing" : "paused"
+  }, [playing])
 
   function handleTogglePlay() {
     if (audioPlayerRef.current) {
@@ -85,11 +111,11 @@ export function AudioControls() {
       const formattedTime =
         audioDuration < 3600
           ? new Date(audioPlayerRef.current.currentTime * 1000)
-              .toISOString()
-              .slice(14, 19)
+            .toISOString()
+            .slice(14, 19)
           : new Date(audioPlayerRef.current.currentTime * 1000)
-              .toISOString()
-              .slice(11, 19);
+            .toISOString()
+            .slice(11, 19);
 
       setCurrentTime(formattedTime);
     }
@@ -118,6 +144,7 @@ export function AudioControls() {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-zinc-100 truncate">
+                {currentPlaying.title}
               </p>
               <p className="text-xs text-zinc-500 truncate">
                 {currentPlaying.artist}
@@ -195,11 +222,10 @@ export function AudioControls() {
 
           {/* Repeat */}
           <button
-            className={`p-1.5 rounded-md transition-colors ${
-              queueContext.repeating
-                ? "text-purple-400 bg-zinc-800"
-                : "text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800"
-            }`}
+            className={`p-1.5 rounded-md transition-colors ${queueContext.repeating
+              ? "text-purple-400 bg-zinc-800"
+              : "text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800"
+              }`}
             title="Repeat"
             onClick={() => queueContext.toggleRepeat()}
           >
