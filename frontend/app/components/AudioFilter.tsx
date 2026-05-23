@@ -32,7 +32,11 @@ export function AudioFilter() {
     setInput: (v: string) => void,
   ) => {
     const tag = input.trim();
-    if (!tag || filters[field].includes(tag)) return;
+    console.log(tag);
+    if (!tag || filters[field].includes(tag)) {
+      setInput("");
+      return;
+    }
     set(field, [...filters[field], tag]);
     setInput("");
   };

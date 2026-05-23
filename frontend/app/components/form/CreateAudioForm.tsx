@@ -40,7 +40,10 @@ export function CreateAudioForm() {
 
   function addTag() {
     const tag = tagInput.trim();
-    if (!tag || form.tags.includes(tag)) return;
+    if (!tag || form.tags.includes(tag)) {
+      setTagInput("");
+      return;
+    }
     set("tags", [...form.tags, tag]);
     setTagInput("");
   }

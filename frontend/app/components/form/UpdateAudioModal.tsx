@@ -37,7 +37,10 @@ export function UpdateAudioForm({
 
   const handleAddTag = () => {
     const tag = tagInput.trim();
-    if (!tag || form.metadata.tags.includes(tag)) return;
+    if (!tag || form.metadata.tags.includes(tag)) {
+      setTagInput("");
+      return;
+    }
     setMeta("tags", [...form.metadata.tags, tag]);
     if (removeTags.includes(tag)) {
       setRemovedTags(removeTags.filter((t) => t !== tag)); // un-mark for removal
