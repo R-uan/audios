@@ -15,7 +15,7 @@ namespace AudioArchive.Services
 
     private async Task CleanupOrphanTags() {
       using var scope = _services.CreateScope();
-      var db = scope.ServiceProvider.GetRequiredService<AudioDatabaseContext>();
+      var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
 
       var deleted = await db.Database.ExecuteSqlRawAsync(""" 
         DELETE FROM tags t

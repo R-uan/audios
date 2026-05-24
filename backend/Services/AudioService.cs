@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AudioArchive.Services
 {
-  public class AudioService(AudioDatabaseContext database) : IAudioService
+  public class AudioService(DatabaseContext database) : IAudioService
   {
     public async Task<List<Tag>> ProcessTags(List<string> targetTags) {
       var lowerTargetTags = targetTags.Select(t => t.ToLower().Trim()).ToList();

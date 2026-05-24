@@ -14,10 +14,11 @@ builder.Services.AddProblemDetails();
 // Services
 builder.Services.AddHostedService<TagCleanupService>();
 builder.Services.AddScoped<IAudioService, AudioService>();
-builder.Services.AddScoped<ICachingService, CachingService>();
+builder.Services.AddSingleton<ICachingService, CachingService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddScoped<IArtistService, ArtistService>();
 
-builder.Services.AddDbContext<AudioDatabaseContext>(options => {
+builder.Services.AddDbContext<DatabaseContext>(options => {
   var connectionString = builder.Configuration.GetConnectionString("Postgres");
   options.UseNpgsql(connectionString);
 });
@@ -32,6 +33,8 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp => {
 var staticFileProvider = builder.Configuration.GetValue<string>("StaticFiles") ??
   throw new Exception("No static files path found.");
 
+builder.Services.AddTransient<CachingMiddleware>();
+
 builder.Services.AddCors(options => {
   options.AddPolicy("AllowAll", policy => {
     policy.AllowAnyOrigin()
@@ -43,6 +46,7 @@ builder.Services.AddCors(options => {
 var app = builder.Build();
 var fileProvider = new PhysicalFileProvider(staticFileProvider);
 var contentTypeProvider = new FileExtensionContentTypeProvider();
+app.UseMiddleware<CachingMiddleware>();
 
 contentTypeProvider.Mappings[".mp3"] = "audio/mpeg";
 contentTypeProvider.Mappings[".flac"] = "audio/flac";

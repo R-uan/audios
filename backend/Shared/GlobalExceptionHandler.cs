@@ -18,6 +18,7 @@ namespace AudioArchive.Shared
         await ctx.Response.WriteAsJsonAsync(new {
           StatusCode = StatusCodes.Status500InternalServerError,
           Message = "An unexpected exception has occurred.",
+          Trace = ex.Message,
           ctx.Request.Path
         }, cancellationToken);
       }
