@@ -2,7 +2,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    container_name: aa_dev_redis 
+    container_name: aadevcache 
     command: redis-server --appendonly yes
 
     ports:
@@ -14,10 +14,10 @@ services:
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
-    container_name: aa_dev_postgres
+    container_name: aadevdb 
 
     environment:
-      POSTGRES_DB: aa_dev
+      POSTGRES_DB: aateste
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     

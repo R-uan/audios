@@ -6,7 +6,11 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {flake-utils, nixpkgs, ... }:
+  outputs = {
+    flake-utils,
+    nixpkgs,
+    ...
+  }:
     flake-utils.lib.eachDefaultSystem (system: let
       pkgs = nixpkgs.legacyPackages.${system};
     in {
@@ -16,10 +20,11 @@
           netcoredbg
           dotnet-ef
           roslyn-ls
+          omnisharp-roslyn
         ];
 
         env = {
-        };      
+        };
 
         shellHook = ''
           mkdir -p .nix-shell/{dotnet,nuget}
