@@ -14,25 +14,28 @@ namespace AudioArchive.Controllers
   {
     [HttpGet]
     public async Task<IActionResult> GetArtists() {
-      var cachingKey = $"getArtist:all";
-      var artists = await _caching.GetValueAsync<List<Artist>>(cachingKey);
-
-      if (artists == null) {
-        artists = await database.Artists.Include(a => a.Audios).ToListAsync();
-        await _caching.SetValueAsync(cachingKey, artists);
-      }
+      var artists = await cachingService.GetAsync(CacheGroup, "all", () => {
+        return databaseContext.Artists.Include(a => a.Audios).ToListAsync();
+      });
 
       return Ok(new {
-        artists.Count,
-        Data = artists.Select(a => new {
+        Count = artists == null ? 0 : artists.Count,
+        Data = artists?.Select(a => new {
           a.Id,
           a.Name,
           a.Note,
-          a.Reddit,
-          a.Twitter,
           AudioCount = a.Audios == null ? 0 : a.Audios.Count
         }).ToList().OrderBy(a => a.Name)
       });
+    }
+
+    [HttpGet("profiles")]
+    public async Task<IActionResult> GetProfiles() {
+      var profiles = await cachingService.GetAsync(CacheGroup, "profiles", () => {
+        return artistService.ArtistProfiles();
+      });
+
+      return Ok(profiles);
     }
 
     [HttpGet("{name}")]

@@ -3,7 +3,8 @@ namespace AudioArchive.Services
   public interface ICachingService
   {
     Task DeleteCache(string key);
-    Task<T?> GetValueAsync<T>(string key);
-    Task SetValueAsync<T>(string key, T value);
+    Task DeleteGroupAsync(string group);
+    Task SetAsync<T>(string group, string key, T value);
+    Task<T?> GetAsync<T>(string group, string key, Func<Task<T>>? factory = null);
   }
 }

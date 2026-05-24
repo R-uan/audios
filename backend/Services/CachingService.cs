@@ -3,34 +3,43 @@ using StackExchange.Redis;
 
 namespace AudioArchive.Services
 {
-  public class CachingService(IConnectionMultiplexer _redis) : ICachingService
+  public class CachingService(IConnectionMultiplexer redis) : ICachingService
   {
-    public async Task SetValueAsync<T>(string key, T value) {
+    private readonly IDatabase database = redis.GetDatabase();
+    private readonly IServer server = redis.GetServer(redis.GetEndPoints()[0]);
+
+    public async Task SetAsync<T>(string group, string key, T value) {
+      var fullKey = $"{group}:{key}";
       var json = JsonSerializer.Serialize(value);
-      var database = _redis.GetDatabase();
-      await database.StringSetAsync(key, json, TimeSpan.FromMinutes(60), ValueCondition.Always);
+      var expiration = TimeSpan.FromMinutes(30);
+      await database.StringSetAsync(fullKey, json, expiration, ValueCondition.Always);
     }
 
-    public async Task<T?> GetValueAsync<T>(string key) {
-      var database = _redis.GetDatabase();
-      var json = await database.StringGetAsync(key);
-      if (json.HasValue) {
-        var objects = JsonSerializer.Deserialize<T>(json.ToString());
+    public async Task<T?> GetAsync<T>(string group, string key, Func<Task<T>>? factory = null) {
+      var fullKey = $"{group}:{key}";
+      var cached = await database.StringGetAsync(fullKey);
 
-        if (objects == null) {
-          await database.StringDeleteAsync(key, ValueCondition.Exists);
-          return default;
-        }
+      if (cached.HasValue) {
+        var objects = JsonSerializer.Deserialize<T>(cached.ToString());
+        if (objects != null) return objects;
+      }
 
-        return objects;
+      if (factory != null) {
+        var data = await factory();
+        await SetAsync(group, key, data);
+        return data;
       }
 
       return default;
     }
 
     async Task ICachingService.DeleteCache(string key) {
-      var database = _redis.GetDatabase();
       await database.StringDeleteAsync(key, ValueCondition.Exists);
+    }
+
+    public async Task DeleteGroupAsync(string group) {
+      var keys = server.Keys(pattern: $"{group}:*").ToArray();
+      if (keys.Length > 0) await database.KeyDeleteAsync(keys);
     }
   }
 }

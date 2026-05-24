@@ -21,37 +21,30 @@ namespace AudioArchive.Controllers
 
     [HttpGet]
     public async Task<IActionResult> GetAudios() {
-      var cachingKey = "audio:all";
-      var audios = await _caching.GetValueAsync<List<AudioView>>(cachingKey);
-
-      if (audios == null) {
-        audios = await _database.Audios
-          .Include(a => a.Metadata)
-          .Select(audio => new AudioView {
-            Id = audio.Id,
-            Title = audio.Title,
-            Artist = audio.Artist.Name,
-            Source = audio.Source,
-            Link = audio.Link,
-            Local = audio.Local,
-            AddedAt = audio.AddedAt,
-            Metadata = new AudioMetadataView {
-              Duration = audio.Metadata.Duration,
-              Genre = audio.Metadata.Genre,
-              ReleaseYear = audio.Metadata.ReleaseYear,
-              Tags = audio.Metadata.Tags.Select(t => t.Name).Order().ToList(),
-            }
-          }).OrderBy(a => a.Title).ToListAsync();
-
-        await _caching.SetValueAsync(cachingKey, audios);
-      }
-
-      var durationSum = audios.Sum(a => a.Metadata.Duration);
+      var audios = await cachingService.GetAsync(CacheGroup, "all", () => {
+        return databaseContext.Audios
+              .Include(a => a.Metadata)
+              .Select(audio => new AudioView {
+                Id = audio.Id,
+                Title = audio.Title,
+                Artist = audio.Artist.Name,
+                Source = audio.Source,
+                Link = audio.Link,
+                Local = audio.Local,
+                AddedAt = audio.AddedAt,
+                Metadata = new AudioMetadataView {
+                  Duration = audio.Metadata.Duration,
+                  Genre = audio.Metadata.Genre,
+                  ReleaseYear = audio.Metadata.ReleaseYear,
+                  Tags = audio.Metadata.Tags.Select(t => t.Name).Order().ToList(),
+                }
+              }).OrderBy(a => a.Title).ToListAsync();
+      });
 
       return Ok(new {
-        audios.Count,
-        AudiosOverallDuration = durationSum,
         Data = audios,
+        Count = audios == null ? 0 : audios.Count,
+        AudiosOverallDuration = audios?.Sum(a => a.Metadata.Duration),
       });
     }
 
@@ -135,20 +128,14 @@ namespace AudioArchive.Controllers
 
     [HttpGet("q")]
     public async Task<IActionResult> QueryAudios([FromQuery] AudioSearchParams parameters) {
-      var requestPath = HttpContext.Request.GetDisplayUrl();
-      var cachingKey = $"audio:{requestPath}";
-      var audios = await _caching.GetValueAsync<List<Audio>>(cachingKey);
-
-      if (audios == null) {
-        audios = await _service.QueryAudios(parameters);
-        await _caching.SetValueAsync(cachingKey, audios);
-      }
-
-      var audiosViews = audios.Select(AudioView.From).ToList();
+      var key = HttpContext.Request.QueryString.ToString();
+      var audios = (await cachingService.GetAsync(CacheGroup, key, () => {
+        return audioService.QueryAudios(parameters);
+      }))?.Select(AudioView.From).ToList();
 
       return base.Ok(new {
-        audiosViews.Count,
-        Data = audiosViews
+        Data = audios,
+        Count = audios == null ? 0 : audios.Count
       });
     }
 
