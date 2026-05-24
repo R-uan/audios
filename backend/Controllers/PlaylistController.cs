@@ -9,7 +9,7 @@ namespace AudioArchive.Controllers
 {
   [ApiController]
   [Route("api/playlist")]
-  public class PlaylistController(AudioDatabaseContext _database) : ControllerBase
+  public class PlaylistController(DatabaseContext _database) : ControllerBase
   {
     [HttpGet]
     public async Task<IActionResult> GetPlaylists() {

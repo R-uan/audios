@@ -8,7 +8,7 @@ namespace AudioArchive.Controllers
 {
   [Route("api/tag")]
   [ApiController]
-  public class TagController(AudioDatabaseContext database) : ControllerBase
+  public class TagController(DatabaseContext database) : ControllerBase
   {
     [HttpGet]
     public async Task<IActionResult> GetTags() {

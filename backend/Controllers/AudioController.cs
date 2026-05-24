@@ -4,20 +4,25 @@ using AudioArchive.Services;
 using AudioArchive.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AudioArchive.Database.Entity;
 using AudioArchive.Shared;
-using Microsoft.AspNetCore.Http.Extensions;
 
 namespace AudioArchive.Controllers
 {
   [ApiController]
   [Route("api/audio")]
-  public class AudioController(
-      AudioDatabaseContext _database,
-      IAudioService _service,
-      ICachingService _caching)
-    : ControllerBase
+  public class AudioController : ControllerBase
   {
+    private readonly IAudioService audioService;
+    private readonly ICachingService cachingService;
+    private readonly DatabaseContext databaseContext;
+
+    private readonly string CacheGroup = "audio";
+
+    public AudioController(DatabaseContext database, IAudioService service, ICachingService caching) {
+      this.databaseContext = database;
+      this.audioService = service;
+      this.cachingService = caching;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAudios() {
@@ -56,7 +61,7 @@ namespace AudioArchive.Controllers
           Target: audioId
         );
 
-      var audio = await _database.Audios.Include(a => a.Artist)
+      var audio = await databaseContext.Audios.Include(a => a.Artist)
         .Include(a => a.Metadata).ThenInclude(m => m.Tags)
         .Where(a => a.Id == audioGuid).FirstOrDefaultAsync() ??
           throw new NotFoundException(
@@ -69,8 +74,7 @@ namespace AudioArchive.Controllers
 
     [HttpPost]
     public async Task<IActionResult> PostAudio([FromBody] PostAudioRequest request) {
-      Console.WriteLine($"is local: {request.Local}");
-      return base.Ok(AudioView.From(await _service.StoreAudio(request)));
+      return base.Ok(AudioView.From(await audioService.StoreAudio(request)));
     }
 
     [HttpPost("bulk")]
@@ -81,7 +85,7 @@ namespace AudioArchive.Controllers
 
       foreach (var entry in request) {
         try {
-          var audio = await _service.StoreAudio(entry);
+          var audio = await audioService.StoreAudio(entry);
           savedAudios.Add(AudioView.From(audio));
         } catch (Exception e) {
           if (e is DuplicatedAudioException) {
@@ -94,7 +98,6 @@ namespace AudioArchive.Controllers
         }
       }
 
-      await _caching.DeleteCache("audio:all");
       return base.Ok(new {
         SavedAudios = savedAudios,
         FailedAdditions = failedAdditions,
@@ -110,16 +113,15 @@ namespace AudioArchive.Controllers
           Target: audioId
         );
 
-      var audio = await _database.Audios.FindAsync(audioGuid) ??
+      var audio = await databaseContext.Audios.FindAsync(audioGuid) ??
         throw new NotFoundException(
           Message: "Could not find audio entry.",
           Target: audioId
         );
 
-      _database.Audios.Remove(audio);
-      await _database.SaveChangesAsync();
+      databaseContext.Audios.Remove(audio);
+      await databaseContext.SaveChangesAsync();
 
-      await _caching.DeleteCache("audio:all");
       return Ok(new {
         Message = "Audio successfully deleted.",
         Target = audioId
@@ -142,10 +144,8 @@ namespace AudioArchive.Controllers
     [HttpPatch("{audioId}")]
     public async Task<IActionResult>
       PatchAudio([FromRoute] Guid audioId, [FromBody] PatchAudioRequest request) {
-      var operation = await _service.UpdateAudio(audioId, request);
+      var operation = await audioService.UpdateAudio(audioId, request);
       var audioView = AudioView.From(operation);
-
-      await _caching.DeleteCache("audio:all");
       return base.Ok(audioView);
     }
   }
