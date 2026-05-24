@@ -11,183 +11,172 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace AudioArchive.Database.Migrations
 {
-    [DbContext(typeof(AudioDatabaseContext))]
-    [Migration("20260105022301_InitialCreate")]
-    partial class InitialCreate
-    {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
+  [DbContext(typeof(DatabaseContext))]
+  [Migration("20260105022301_InitialCreate")]
+  partial class InitialCreate
+  {
+    /// <inheritdoc />
+    protected override void BuildTargetModel(ModelBuilder modelBuilder) {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+      modelBuilder
+          .HasAnnotation("ProductVersion", "10.0.0")
+          .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+      NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("AudioArchive.Database.Entity.Artist", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+      modelBuilder.Entity("AudioArchive.Database.Entity.Artist", b => {
+        b.Property<Guid>("Id")
+            .ValueGeneratedOnAdd()
+            .HasColumnType("uuid");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
+        b.Property<string>("Name")
+            .IsRequired()
+            .HasColumnType("text");
 
-                    b.Property<string>("Reddit")
-                        .HasColumnType("text");
+        b.Property<string>("Reddit")
+            .HasColumnType("text");
 
-                    b.Property<string>("Twitter")
-                        .HasColumnType("text");
+        b.Property<string>("Twitter")
+            .HasColumnType("text");
 
-                    b.HasKey("Id");
+        b.HasKey("Id");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
+        b.HasIndex("Name")
+            .IsUnique();
 
-                    b.ToTable("artists", (string)null);
-                });
+        b.ToTable("artists", (string)null);
+      });
 
-            modelBuilder.Entity("AudioArchive.Database.Entity.Audio", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+      modelBuilder.Entity("AudioArchive.Database.Entity.Audio", b => {
+        b.Property<Guid>("Id")
+            .ValueGeneratedOnAdd()
+            .HasColumnType("uuid");
 
-                    b.Property<DateTime>("AddedAt")
-                        .HasColumnType("timestamp with time zone");
+        b.Property<DateTime>("AddedAt")
+            .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("ArtistId")
-                        .HasColumnType("uuid");
+        b.Property<Guid>("ArtistId")
+            .HasColumnType("uuid");
 
-                    b.Property<string>("Link")
-                        .HasColumnType("text");
+        b.Property<string>("Link")
+            .HasColumnType("text");
 
-                    b.Property<bool>("Local")
-                        .HasColumnType("boolean");
+        b.Property<bool>("Local")
+            .HasColumnType("boolean");
 
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("text");
+        b.Property<string>("Source")
+            .IsRequired()
+            .HasColumnType("text");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
+        b.Property<string>("Title")
+            .IsRequired()
+            .HasColumnType("text");
 
-                    b.HasKey("Id");
+        b.HasKey("Id");
 
-                    b.HasIndex("ArtistId");
+        b.HasIndex("ArtistId");
 
-                    b.ToTable("audios", (string)null);
-                });
+        b.ToTable("audios", (string)null);
+      });
 
-            modelBuilder.Entity("AudioArchive.Database.Entity.AudioMetadata", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+      modelBuilder.Entity("AudioArchive.Database.Entity.AudioMetadata", b => {
+        b.Property<Guid>("Id")
+            .ValueGeneratedOnAdd()
+            .HasColumnType("uuid");
 
-                    b.Property<Guid>("AudioId")
-                        .HasColumnType("uuid");
+        b.Property<Guid>("AudioId")
+            .HasColumnType("uuid");
 
-                    b.Property<int?>("Duration")
-                        .HasColumnType("integer");
+        b.Property<int?>("Duration")
+            .HasColumnType("integer");
 
-                    b.Property<string>("Genrer")
-                        .HasColumnType("text");
+        b.Property<string>("Genrer")
+            .HasColumnType("text");
 
-                    b.Property<string>("Mood")
-                        .HasColumnType("text");
+        b.Property<string>("Mood")
+            .HasColumnType("text");
 
-                    b.Property<int?>("ReleaseYear")
-                        .HasColumnType("integer");
+        b.Property<int?>("ReleaseYear")
+            .HasColumnType("integer");
 
-                    b.HasKey("Id");
+        b.HasKey("Id");
 
-                    b.HasIndex("AudioId")
-                        .IsUnique();
+        b.HasIndex("AudioId")
+            .IsUnique();
 
-                    b.ToTable("audio_metadata", (string)null);
-                });
+        b.ToTable("audio_metadata", (string)null);
+      });
 
-            modelBuilder.Entity("AudioArchive.Database.Entity.Tag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+      modelBuilder.Entity("AudioArchive.Database.Entity.Tag", b => {
+        b.Property<Guid>("Id")
+            .ValueGeneratedOnAdd()
+            .HasColumnType("uuid");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
+        b.Property<string>("Name")
+            .IsRequired()
+            .HasColumnType("text");
 
-                    b.HasKey("Id");
+        b.HasKey("Id");
 
-                    b.ToTable("tags", (string)null);
-                });
+        b.ToTable("tags", (string)null);
+      });
 
-            modelBuilder.Entity("AudioMetadataTag", b =>
-                {
-                    b.Property<Guid>("AudioMetadatasId")
-                        .HasColumnType("uuid");
+      modelBuilder.Entity("AudioMetadataTag", b => {
+        b.Property<Guid>("AudioMetadatasId")
+            .HasColumnType("uuid");
 
-                    b.Property<Guid>("TagsId")
-                        .HasColumnType("uuid");
+        b.Property<Guid>("TagsId")
+            .HasColumnType("uuid");
 
-                    b.HasKey("AudioMetadatasId", "TagsId");
+        b.HasKey("AudioMetadatasId", "TagsId");
 
-                    b.HasIndex("TagsId");
+        b.HasIndex("TagsId");
 
-                    b.ToTable("audio_metadata_tags", (string)null);
-                });
+        b.ToTable("audio_metadata_tags", (string)null);
+      });
 
-            modelBuilder.Entity("AudioArchive.Database.Entity.Audio", b =>
-                {
-                    b.HasOne("AudioArchive.Database.Entity.Artist", "Artist")
-                        .WithMany("Audios")
-                        .HasForeignKey("ArtistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+      modelBuilder.Entity("AudioArchive.Database.Entity.Audio", b => {
+        b.HasOne("AudioArchive.Database.Entity.Artist", "Artist")
+            .WithMany("Audios")
+            .HasForeignKey("ArtistId")
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired();
 
-                    b.Navigation("Artist");
-                });
+        b.Navigation("Artist");
+      });
 
-            modelBuilder.Entity("AudioArchive.Database.Entity.AudioMetadata", b =>
-                {
-                    b.HasOne("AudioArchive.Database.Entity.Audio", "Audio")
-                        .WithOne("Metadata")
-                        .HasForeignKey("AudioArchive.Database.Entity.AudioMetadata", "AudioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+      modelBuilder.Entity("AudioArchive.Database.Entity.AudioMetadata", b => {
+        b.HasOne("AudioArchive.Database.Entity.Audio", "Audio")
+            .WithOne("Metadata")
+            .HasForeignKey("AudioArchive.Database.Entity.AudioMetadata", "AudioId")
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired();
 
-                    b.Navigation("Audio");
-                });
+        b.Navigation("Audio");
+      });
 
-            modelBuilder.Entity("AudioMetadataTag", b =>
-                {
-                    b.HasOne("AudioArchive.Database.Entity.AudioMetadata", null)
-                        .WithMany()
-                        .HasForeignKey("AudioMetadatasId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+      modelBuilder.Entity("AudioMetadataTag", b => {
+        b.HasOne("AudioArchive.Database.Entity.AudioMetadata", null)
+            .WithMany()
+            .HasForeignKey("AudioMetadatasId")
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired();
 
-                    b.HasOne("AudioArchive.Database.Entity.Tag", null)
-                        .WithMany()
-                        .HasForeignKey("TagsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+        b.HasOne("AudioArchive.Database.Entity.Tag", null)
+            .WithMany()
+            .HasForeignKey("TagsId")
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired();
+      });
 
-            modelBuilder.Entity("AudioArchive.Database.Entity.Artist", b =>
-                {
-                    b.Navigation("Audios");
-                });
+      modelBuilder.Entity("AudioArchive.Database.Entity.Artist", b => {
+        b.Navigation("Audios");
+      });
 
-            modelBuilder.Entity("AudioArchive.Database.Entity.Audio", b =>
-                {
-                    b.Navigation("Metadata");
-                });
+      modelBuilder.Entity("AudioArchive.Database.Entity.Audio", b => {
+        b.Navigation("Metadata");
+      });
 #pragma warning restore 612, 618
-        }
     }
+  }
 }

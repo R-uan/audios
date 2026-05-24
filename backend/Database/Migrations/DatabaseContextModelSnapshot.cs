@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace AudioArchive.Database.Migrations
 {
-    [DbContext(typeof(AudioDatabaseContext))]
-    partial class AudioDatabaseContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(DatabaseContext))]
+    partial class DatabaseContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -28,17 +28,17 @@ namespace AudioArchive.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("InActivity")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Nationality")
+                        .HasColumnType("text");
+
                     b.Property<string>("Note")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Reddit")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Twitter")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -47,6 +47,35 @@ namespace AudioArchive.Database.Migrations
                         .IsUnique();
 
                     b.ToTable("artists", (string)null);
+                });
+
+            modelBuilder.Entity("AudioArchive.Database.Entity.ArtistSocial", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ArtistId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistId");
+
+                    b.ToTable("artist_socials", (string)null);
                 });
 
             modelBuilder.Entity("AudioArchive.Database.Entity.Audio", b =>
@@ -177,7 +206,18 @@ namespace AudioArchive.Database.Migrations
 
                     b.HasIndex("PlaylistsId");
 
-                    b.ToTable("AudioPlaylist");
+                    b.ToTable("playlist_audios", (string)null);
+                });
+
+            modelBuilder.Entity("AudioArchive.Database.Entity.ArtistSocial", b =>
+                {
+                    b.HasOne("AudioArchive.Database.Entity.Artist", "Artist")
+                        .WithMany("Socials")
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Artist");
                 });
 
             modelBuilder.Entity("AudioArchive.Database.Entity.Audio", b =>
@@ -235,6 +275,8 @@ namespace AudioArchive.Database.Migrations
             modelBuilder.Entity("AudioArchive.Database.Entity.Artist", b =>
                 {
                     b.Navigation("Audios");
+
+                    b.Navigation("Socials");
                 });
 
             modelBuilder.Entity("AudioArchive.Database.Entity.Audio", b =>
