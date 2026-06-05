@@ -11,7 +11,7 @@ namespace AudioArchive.Services
     public async Task SetAsync<T>(string group, string key, T value) {
       var fullKey = $"{group}:{key}";
       var json = JsonSerializer.Serialize(value);
-      var expiration = TimeSpan.FromMinutes(30);
+      var expiration = TimeSpan.FromMinutes(5);
       await database.StringSetAsync(fullKey, json, expiration, ValueCondition.Always);
     }
 
@@ -39,7 +39,9 @@ namespace AudioArchive.Services
 
     public async Task DeleteGroupAsync(string group) {
       var keys = server.Keys(pattern: $"{group}:*").ToArray();
-      if (keys.Length > 0) await database.KeyDeleteAsync(keys);
+      if (keys.Length > 0) {
+        await database.KeyDeleteAsync(keys);
+      }
     }
   }
 }

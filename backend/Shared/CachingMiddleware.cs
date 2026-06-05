@@ -16,7 +16,7 @@ namespace AudioArchive.Shared
             var path = context.Request.Path.ToString();
 
             if (path.Contains("api/artist")) cacheGroup = "artist";
-            else if (path.Contains("api/audios")) cacheGroup = "audio";
+            else if (path.Contains("api/audio")) cacheGroup = "audio";
             else if (path.Contains("api/tags")) cacheGroup = "tag";
             else break;
 
