@@ -32,7 +32,10 @@ export function CreateSGAudioForm() {
 
   function addTag() {
     const tag = tagInput.trim();
-    if (!tag || form.tags.includes(tag)) return;
+    if (!tag || form.tags.includes(tag)) {
+      setTagInput("");
+      return;
+    }
     setSGForm("tags", [...form.tags, tag]);
     setTagInput("");
   }
