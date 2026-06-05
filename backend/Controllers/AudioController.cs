@@ -74,19 +74,19 @@ namespace AudioArchive.Controllers
 
     [HttpPost]
     public async Task<IActionResult> PostAudio([FromBody] PostAudioRequest request) {
-      return base.Ok(AudioView.From(await audioService.StoreAudio(request)));
+      return base.Ok(await audioService.StoreAudio(request));
     }
 
     [HttpPost("bulk")]
     public async Task<IActionResult> PostMultipleAudios([FromBody] List<PostAudioRequest> request) {
-      List<AudioView> savedAudios = [];
+      List<PostAudioResult> savedAudios = [];
       List<string> failedAdditions = [];
       List<string> duplicatedAudios = [];
 
       foreach (var entry in request) {
         try {
           var audio = await audioService.StoreAudio(entry);
-          savedAudios.Add(AudioView.From(audio));
+          savedAudios.Add(audio);
         } catch (Exception e) {
           if (e is DuplicatedAudioException) {
             duplicatedAudios.Add(entry.Link ?? entry.Source);

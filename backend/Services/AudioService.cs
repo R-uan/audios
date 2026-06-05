@@ -2,6 +2,7 @@ using System.Data;
 using AudioArchive.Database;
 using AudioArchive.Database.Entity;
 using AudioArchive.Models;
+using AudioArchive.Models.Views;
 using AudioArchive.Shared;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,35 +26,48 @@ namespace AudioArchive.Services
       return existingTags;
     }
 
-    public async Task<Audio> StoreAudio(PostAudioRequest request) {
-      // Because EF already wraps the SaveChangesAsync into a transaction 
-      // and we only call it once here, the explicitly call is redundant.
-      // var transaction = database.Database.BeginTransaction();
+    public async Task<PostAudioResult> StoreAudio(PostAudioRequest request) {
       var artist = await database.Artists
-        .Include(a => a.Audios)
-        .Where(a => a.Name == request.Artist)
-        .FirstOrDefaultAsync() ?? new Artist {
-          Name = request.Artist,
-          Id = Guid.NewGuid()
-        };
+          .Include(a => a.Audios)
+          .Where(a => a.Name == request.Artist)
+          .FirstOrDefaultAsync();
+
+      if (artist == null) {
+        artist = new Artist { Id = Guid.NewGuid(), Name = request.Artist };
+      }
 
       var audio = Audio.FromRequest(request, artist);
+      bool isNew = true;
 
       if (artist.Audios != null && artist.Audios.Any(a => a.Source.Contains(audio.Source))) {
-        throw new DuplicatedAudioException(
-          Message: "Attempted to add an already stored audio",
-          Target: request.Link ?? request.Source
-        );
+        audio = await database.Audios
+            .Include(a => a.Metadata)
+            .ThenInclude(m => m.Tags)
+            .Where(a => a.Source == request.Source)
+            .FirstAsync();
+        isNew = false;
       }
 
       if (request.Tags != null) {
         var audioTags = await ProcessTags(request.Tags);
-        audio.Metadata.Tags = [.. audioTags];
+
+        audio.Metadata.Tags ??= [];
+
+        if (!isNew) {
+          var existingTagIds = audio.Metadata.Tags.Select(t => t.Id).ToHashSet();
+          audioTags = audioTags.Where(t => !existingTagIds.Contains(t.Id)).ToList();
+          audio.UpdatedAt = DateTime.UtcNow;
+        }
+
+        audio.Metadata.Tags.AddRange(audioTags);
       }
 
-      await database.Audios.AddAsync(audio);
+      if (isNew) {
+        await database.Audios.AddAsync(audio);
+      }
+
       await database.SaveChangesAsync();
-      return audio;
+      return new PostAudioResult { Audio = AudioView.From(audio), IsNew = isNew };
     }
 
     public async Task<Audio> UpdateAudio(Guid audioId, PatchAudioRequest request) {
@@ -104,6 +118,7 @@ namespace AudioArchive.Services
         audio.Metadata.Tags?.RemoveAll(t => request.RemoveTags.Contains(t.Name));
       }
 
+      audio.UpdatedAt = DateTime.UtcNow;
       await database.SaveChangesAsync();
       return audio;
     }
