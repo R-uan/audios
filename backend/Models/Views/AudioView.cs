@@ -12,6 +12,8 @@ namespace AudioArchive.Models.Views
     public string? Link { get; set; }
     public required string Source { get; set; }
     public required DateTime AddedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+
     public required AudioMetadataView Metadata { get; set; }
 
     public static AudioView From(Audio audio) {
@@ -23,6 +25,7 @@ namespace AudioArchive.Models.Views
         Local = audio.Local,
         Link = audio.Link,
         AddedAt = audio.AddedAt,
+        UpdatedAt = audio.UpdatedAt,
         Metadata = AudioMetadataView.From(audio.Metadata)
       };
     }

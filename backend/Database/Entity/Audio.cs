@@ -8,18 +8,20 @@ namespace AudioArchive.Database.Entity
     public required Guid Id { get; set; } = Guid.NewGuid();
     public required Guid ArtistId { get; set; }
     public required string Title { get; set; }
-
-    public string? Link { get; set; }
-    public required bool Local { get; set; }
-    // If the media is stored locally or not
+    // The differente between link and source is that the link may be an url to a provider
+    // where the sound is stored or detailed, while source is a direct url to the media.
+    // Links are usually null on local storage as they have no such page.
+    public string? Link { get; set; } 
+    public required bool Local { get; set; } // If the source is a path or a link
     public required string Source { get; set; }
 
     public required Artist Artist { get; set; }
     public required DateTime AddedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; } = null;
+    public required AudioMetadata Metadata { get; set; }
 
     [JsonIgnore]
     public List<Playlist>? Playlists { get; set; }
-    public required AudioMetadata Metadata { get; set; }
 
     public static Audio FromRequest(PostAudioRequest request, Artist artist) {
       var audioId = Guid.NewGuid();
