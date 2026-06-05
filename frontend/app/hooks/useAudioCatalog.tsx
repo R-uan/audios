@@ -59,7 +59,7 @@ export function useAudioCatalog() {
         filters.excludeTags.some((t) => a.metadata.tags.includes(t))
       )
         return false;
-      if (cutoff && new Date(a.addedAt) < cutoff) return false;
+      if (cutoff && new Date(a.updatedAt) < cutoff) return false;
       return true;
     });
   }, [audioContext.audios, currentPlaylist, filters]);

@@ -113,7 +113,7 @@ export function AudioFilter() {
       <div>
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs font-medium text-zinc-500">
-            Added within
+            Updated within
           </span>
           {filters.hoursAgo !== null ? (
             <div className="flex items-center gap-1.5">
