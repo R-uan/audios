@@ -2,10 +2,9 @@ using Microsoft.AspNetCore.Diagnostics;
 
 namespace AudioArchive.Shared
 {
-  public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> _logger) : IExceptionHandler
+  public class GlobalExceptionHandler : IExceptionHandler
   {
     public async ValueTask<bool> TryHandleAsync(HttpContext ctx, Exception ex, CancellationToken cancellationToken) {
-      _logger.LogError(ex, ex.Message);
       if (ex is APIException apiEx) {
         ctx.Response.StatusCode = apiEx.StatusCode;
         await ctx.Response.WriteAsJsonAsync(new {
