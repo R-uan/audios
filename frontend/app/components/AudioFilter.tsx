@@ -12,6 +12,17 @@ export function AudioFilter() {
   const [includeInput, setIncludeInput] = useState("");
   const [excludeInput, setExcludeInput] = useState("");
 
+  const includeTagsRef = useRef(filters.includeTags);
+  const excludeTagsRef = useRef(filters.excludeTags);
+
+  useEffect(() => {
+    includeTagsRef.current = filters.includeTags;
+  }, [filters.includeTags]);
+
+  useEffect(() => {
+    excludeTagsRef.current = filters.excludeTags;
+  }, [filters.excludeTags]);
+
   const artistSuggestions = useMemo(
     () =>
       [
@@ -32,7 +43,6 @@ export function AudioFilter() {
     setInput: (v: string) => void,
   ) => {
     const tag = input.trim();
-    console.log(tag);
     if (!tag || filters[field].includes(tag)) {
       setInput("");
       return;
@@ -52,14 +62,26 @@ export function AudioFilter() {
       field: "includeTags" | "excludeTags",
       input: string,
       setInput: (v: string) => void,
+      suggestions: string[],
+      tagsRef: React.RefObject<string[]>,
     ) =>
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        addTag(field, input, setInput);
+        const filtered = suggestions.filter((s) =>
+          s.toLowerCase().includes(input.toLowerCase()),
+        );
+        const valueToAdd = filtered[0];
+        if (!valueToAdd) return;
+        if (tagsRef.current!.includes(valueToAdd)) {
+          setInput("");
+          return;
+        }
+        set(field, [...tagsRef.current!, valueToAdd]);
+        setInput("");
       }
-      if (e.key === "Backspace" && !input && filters[field].length > 0)
-        removeTag(field, filters[field][filters[field].length - 1]);
+      if (e.key === "Backspace" && !input && tagsRef.current!.length > 0)
+        set(field, tagsRef.current!.slice(0, -1));
     };
 
   const hasAnyFilter =
@@ -150,7 +172,13 @@ export function AudioFilter() {
         )}
         onAdd={() => addTag("includeTags", includeInput, setIncludeInput)}
         onRemove={(t) => removeTag("includeTags", t)}
-        onKeyDown={makeTagKeyDown("includeTags", includeInput, setIncludeInput)}
+        onKeyDown={makeTagKeyDown(
+          "includeTags",
+          includeInput,
+          setIncludeInput,
+          tagSuggestions.filter((t) => !filters.includeTags.includes(t)),
+          includeTagsRef,
+        )}
         onSuggestionSelect={(t) => {
           set("includeTags", [...filters.includeTags, t]);
           setIncludeInput("");
@@ -172,7 +200,13 @@ export function AudioFilter() {
         )}
         onAdd={() => addTag("excludeTags", excludeInput, setExcludeInput)}
         onRemove={(t) => removeTag("excludeTags", t)}
-        onKeyDown={makeTagKeyDown("excludeTags", excludeInput, setExcludeInput)}
+        onKeyDown={makeTagKeyDown(
+          "excludeTags",
+          excludeInput,
+          setExcludeInput,
+          tagSuggestions.filter((t) => !filters.excludeTags.includes(t)),
+          excludeTagsRef,
+        )}
         onSuggestionSelect={(t) => {
           set("excludeTags", [...filters.excludeTags, t]);
           setExcludeInput("");
