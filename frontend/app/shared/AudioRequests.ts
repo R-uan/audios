@@ -1,4 +1,5 @@
 import { IAudio, IPostAudio, IUpdateAudio } from "../models/IAudio";
+import { IPostAudioResult } from "../models/IPostAudioResult";
 import { IRequestError } from "../models/IRequestError";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -13,14 +14,14 @@ export class AudioRequest {
 
   public static async PostAudio(
     audio: IPostAudio,
-  ): Promise<IAudio | IRequestError> {
+  ): Promise<IPostAudioResult | IRequestError> {
     const request = await fetch(`${API_URL}/audio`, {
       method: "POST",
       body: JSON.stringify(audio),
       headers: { "Content-Type": "application/json" },
     });
     if (request.ok) {
-      const response: IAudio = await request.json();
+      const response: IPostAudioResult = await request.json();
       return response;
     } else {
       const error: IRequestError = await request.json();

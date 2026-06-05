@@ -82,13 +82,18 @@ export function AudioContextProvider({ children }: { children: ReactNode }) {
         source: "AudioContextProvider",
       });
     } else {
-      setAudios([...audios, response]);
+      if (!response.isNew) {
+        setAudios((prev) =>
+          prev.map((a) => (a.id === response.audio.id ? response.audio : a)),
+        );
+      } else setAudios([...audios, response.audio]);
+
       noticeContext.sendNotice({
         id: `create-new-audio-${Math.random()}`,
         success: true,
         title: "Add Audio Request",
         source: "AudioContextProvider",
-        message: `Audio Sucessfully Created.`,
+        message: `Audio Sucessfully ${response.isNew ? "Created" : "Updated"}.`,
       });
     }
   }
