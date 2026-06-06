@@ -1,5 +1,6 @@
 import { memo, MouseEvent } from "react";
 import { IAudio } from "../models/IAudio";
+import { TitleTooltip } from "./shared/TitleTooltip";
 
 export const AudioWrapper = memo(
   ({
@@ -22,11 +23,14 @@ export const AudioWrapper = memo(
       >
         {/* Title + Artist */}
         <div className="flex flex-col min-w-0 w-64 shrink-0">
-          <span className="text-sm text-zinc-200 group-hover:text-zinc-100 truncate leading-snug transition-colors">
-            {audio.title.length <= 40
-              ? audio.title
-              : `${audio.title.slice(0, 37)}…`}
-          </span>
+          <TitleTooltip key={`${audio.id}-${audio.title}`} title={audio.title}>
+            <span className="text-sm text-zinc-200 group-hover:text-zinc-100 truncate leading-snug transition-colors">
+              {audio.title.length <= 40
+                ? audio.title
+                : `${audio.title.slice(0, 37)}…`}
+            </span>
+          </TitleTooltip>
+
           <span className="text-xs text-zinc-500 group-hover:text-zinc-400 truncate mt-0.5 transition-colors">
             {audio.artist}
           </span>
