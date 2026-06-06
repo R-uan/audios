@@ -15,7 +15,7 @@ interface AudioContextType {
   audios: IAudio[];
   deleteAudio: (id: string) => Promise<void>;
   addNewAudio: (audio: IPostAudio) => Promise<void>;
-  updateAudio: (id: string, audio: IUpdateAudio) => Promise<void>;
+  updateAudio: (id: string, audio: IUpdateAudio) => Promise<IAudio | null>;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -35,6 +35,7 @@ export function AudioContextProvider({ children }: { children: ReactNode }) {
         title: "Update Audio Request",
         source: "AudioContextProvider",
       });
+      return null;
     } else {
       setAudios((prev) =>
         prev.map((a) => (a.id === response.id ? response : a)),
@@ -47,6 +48,7 @@ export function AudioContextProvider({ children }: { children: ReactNode }) {
         message: `Audio Sucessfully Updated.`,
       });
     }
+    return response;
   }
 
   async function deleteAudio(id: string) {

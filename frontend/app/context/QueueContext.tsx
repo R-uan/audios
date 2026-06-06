@@ -20,6 +20,7 @@ interface QueueContextType {
   clearQueue: () => void;
   playPrevious: () => void;
   toggleRepeat: () => void;
+  syncQueue: (updatedAudio: IAudio) =>void;
   playNow: (audio: IAudio) => void;
   setQueue: (queue: IAudio[]) => void;
   queuePlaylist: (playlist: IPlaylist) => void;
@@ -122,6 +123,12 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  function syncQueue(updatedAudio: IAudio) {
+    setQueue((prev) =>
+      prev.map((item) => (item.id === updatedAudio.id ? updatedAudio : item))
+    );
+  }
+
   function queuePlaylist(playlist: IPlaylist) {
     const audios = audioContext.audios.filter((a) =>
       playlist.audios.includes(a.id),
@@ -150,6 +157,7 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     <QueueContext.Provider
       value={{
         queue,
+        syncQueue,
         setQueue, // Add this
         toggleRepeat,
         repeating: repeat,

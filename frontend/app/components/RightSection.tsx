@@ -36,12 +36,42 @@ function TagsRow({ tags }: { tags: string[] }) {
 export function RightSection() {
   const queueContext = useQueueContext();
   const { set } = useFilterContext();
+  const audioContext = useAudioContext();
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [editingAudio, setEditingAudio] = useState<IAudio | null>(null);
 
   const { handleRightClick, contextMenu, ContextMenu, closeContextMenu } =
     useContextMenu<IAudio>("right_section");
+
+  async function handleUpdateAudio(
+    audio: IAudio,
+    add: string[],
+    remove: string[],
+  ) {
+    const update: IUpdateAudio = {
+      title: audio.title,
+      duration: audio.metadata.duration,
+      artist: audio.artist,
+      genre: audio.metadata.genre,
+      link: audio.link,
+      mood: audio.metadata.mood,
+      releaseYear: audio.metadata.releaseYear,
+      source: audio.source,
+      addTags: add,
+      removeTags: remove,
+    };
+
+    const updatedAudio = await audioContext.updateAudio(audio.id, update);
+    if (updatedAudio) queueContext.syncQueue(updatedAudio);
+    setEditingAudio(null);
+  }
+
+  function handleEditAudio() {
+    if (contextMenu?.data) setEditingAudio(contextMenu.data);
+    closeContextMenu();
+  }
 
   const currentAndUpcoming = useMemo(
     () => queueContext.queue.slice(queueContext.queuePointer),
@@ -295,12 +325,26 @@ export function RightSection() {
         <hr className="my-1 mx-3 border-zinc-700/40" />
 
         <button
+          onClick={handleEditAudio}
+          className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+        >
+          Edit Audio
+        </button>
+        <button
           onClick={seeMoreOfArtist}
           className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
         >
           See more of {contextMenu?.data.artist}
         </button>
       </ContextMenu>
+
+      {editingAudio !== null && (
+        <UpdateAudioForm
+          audio={editingAudio}
+          onClose={() => setEditingAudio(null)}
+          onSave={handleUpdateAudio}
+        />
+      )}
     </section>
   );
 }
