@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import { Check, X } from "lucide-react";
 import { useNoticeContext } from "../context/NoticeContext";
 import { INotice } from "../models/INotice";
 
@@ -8,57 +9,33 @@ function NoticeItem({ notice }: { notice: INotice }) {
       className={`flex items-start gap-3 px-4 py-3 rounded-lg shadow-xl shadow-black/40 border backdrop-blur-sm
         ${
           notice.success
-            ? "bg-zinc-900/95 border-zinc-700"
-            : "bg-zinc-900/95 border-red-800/60"
+            ? "bg-surface/95 border-border-strong"
+            : "bg-surface/95 border-danger/60"
         }`}
     >
       {/* Icon */}
       <div
-        className={`shrink-0 mt-0.5 ${notice.success ? "text-green-500" : "text-red-400"}`}
+        className={`shrink-0 mt-0.5 ${notice.success ? "text-positive" : "text-danger"}`}
       >
         {notice.success ? (
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
+          <Check className="w-4 h-4" />
         ) : (
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <X className="w-4 h-4" />
         )}
       </div>
 
       {/* Content */}
       <div className="flex flex-col min-w-0 flex-1 gap-0.5">
         <div className="flex items-center justify-between gap-4">
-          <span className="text-sm font-medium text-zinc-100 truncate">
+          <span className="text-sm font-medium text-foreground truncate">
             {notice.title}
           </span>
-          <span className="text-[10px] text-zinc-600 shrink-0">
+          <span className="text-[10px] text-muted-faint shrink-0">
             {notice.source}
           </span>
         </div>
         {notice.message && (
-          <span className="text-xs text-zinc-400 line-clamp-2">
+          <span className="text-xs text-muted line-clamp-2">
             {notice.message}
           </span>
         )}

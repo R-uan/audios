@@ -1,13 +1,20 @@
-import { memo, MouseEvent } from "react";
+import { memo } from "react";
+import { ListPlus, Play } from "lucide-react";
 import { IAudio } from "../models/IAudio";
-import { TitleTooltip } from "./shared/TitleTooltip";
+import { Tooltip } from "./ui/Tooltip";
+import { Artwork } from "./ui/Artwork";
+import { IconButton } from "./ui/IconButton";
 
 export const AudioWrapper = memo(
   ({
     audio,
+    onPlay,
+    onQueue,
     onContextMenuHandler,
   }: {
     audio: IAudio;
+    onPlay: (audio: IAudio) => void;
+    onQueue: (audio: IAudio) => void;
     onContextMenuHandler: (e: React.MouseEvent, audio: IAudio) => void;
   }) => {
     function secondsToMinutes(seconds: number) {
@@ -19,39 +26,63 @@ export const AudioWrapper = memo(
       <li
         key={audio.id}
         onContextMenu={(e) => onContextMenuHandler(e, audio)}
-        className="group flex items-center gap-4 px-3 py-2 rounded-md hover:bg-zinc-800 transition-colors cursor-default"
+        onClick={() => onPlay(audio)}
+        className="group flex items-center gap-3 px-3 py-2 rounded-md hover:bg-surface-2 transition-colors cursor-pointer"
       >
+        {/* Artwork */}
+        <div className="relative shrink-0">
+          <Artwork seed={audio.title} size={40} alt={audio.title} />
+          <div className="absolute inset-0 rounded-md bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+            <Play className="w-4 h-4 text-white" fill="currentColor" />
+          </div>
+        </div>
+
         {/* Title + Artist */}
         <div className="flex flex-col min-w-0 w-64 shrink-0">
-          <TitleTooltip key={`${audio.id}-${audio.title}`} title={audio.title}>
-            <span className="text-sm text-zinc-200 group-hover:text-zinc-100 truncate leading-snug transition-colors">
+          <Tooltip content={audio.title} className="flex-1">
+            <span className="block text-sm text-foreground-soft group-hover:text-foreground truncate leading-snug transition-colors">
               {audio.title.length <= 40
                 ? audio.title
                 : `${audio.title.slice(0, 37)}…`}
             </span>
-          </TitleTooltip>
+          </Tooltip>
 
-          <span className="text-xs text-zinc-500 group-hover:text-zinc-400 truncate mt-0.5 transition-colors">
+          <span className="text-xs text-muted group-hover:text-muted truncate mt-0.5 transition-colors">
             {audio.artist}
           </span>
         </div>
+
         {/* Tags */}
         <div className="flex flex-1 flex-wrap gap-1.5 min-w-0">
           {audio.metadata.tags.map((t) => (
             <span
               key={t}
-              className="px-1.5 py-0.5 text-xs text-zinc-400 bg-zinc-800 group-hover:bg-zinc-700 border border-zinc-700 rounded transition-colors"
+              className="px-1.5 py-0.5 text-xs text-muted bg-surface-2 group-hover:bg-surface-3 border border-border rounded transition-colors"
             >
               {t}
             </span>
           ))}
         </div>
+
         {/* Duration */}
-        <span className="text-xs tabular-nums text-zinc-500 group-hover:text-zinc-400 shrink-0 transition-colors">
+        <span className="text-xs tabular-nums text-muted group-hover:text-foreground-soft shrink-0 transition-colors">
           {audio.metadata.duration
             ? secondsToMinutes(audio.metadata.duration)
             : "??:??"}
         </span>
+
+        {/* Hover action */}
+        <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <IconButton
+            label="Add to queue"
+            onClick={(e) => {
+              e.stopPropagation();
+              onQueue(audio);
+            }}
+          >
+            <ListPlus className="w-4 h-4" />
+          </IconButton>
+        </div>
       </li>
     );
   },

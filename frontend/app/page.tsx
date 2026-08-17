@@ -24,7 +24,7 @@ export default function Home() {
             <AudioContextProvider>
               <QueueContextProvider>
                 <NoticeWindow />
-                <div className="h-screen w-screen bg-zinc-950 text-zinc-100 overflow-hidden flex flex-col">
+                <div className="h-screen w-screen bg-background text-foreground overflow-hidden flex flex-col">
                   <main className="flex flex-col h-full">
                     <Header
                       onToggleQueue={() => setQueueOpen((prev) => !prev)}

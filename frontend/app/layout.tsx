@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Totally Legal Local Audio Player",
-  description: "Local",
+  title: "Audio Archive",
+  description: "A local audio library",
 };
 
 export default function RootLayout({

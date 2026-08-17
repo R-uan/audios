@@ -37,6 +37,14 @@ export function ContextMenuProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("mousedown", handleCloseMenu);
   }, []);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setContextMenu(null);
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, []);
+
   return (
     <ContextMenuContext.Provider value={{ contextMenu, setContextMenu }}>
       {children}
@@ -90,9 +98,11 @@ export function useContextMenu<T>(id: string) {
       return (
         <div
           data-context-menu
+          role="menu"
+          aria-label="Context menu"
           onContextMenu={(e) => e.preventDefault()}
-          style={{ top: y, left: x }}
-          className="fixed z-50 min-w-40 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl shadow-black/50 py-1 flex flex-col"
+          style={{ top: y, left: x, animation: "fade-in 0.2s ease-out" }}
+          className="fixed z-50 min-w-40 bg-surface border border-border-strong rounded-lg shadow-xl shadow-black/50 py-1 flex flex-col"
         >
           {children}
         </div>

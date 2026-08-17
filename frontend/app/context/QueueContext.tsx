@@ -9,7 +9,6 @@ import { IAudio } from "../models/IAudio";
 import { IPlaylist } from "../models/IPlaylist";
 import { useAudioContext } from "./AudioContext";
 import { useNoticeContext } from "./NoticeContext";
-import { clear } from "console";
 
 interface QueueContextType {
   queue: IAudio[];
@@ -56,29 +55,26 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     setRepeat(!repeat);
   }
 
-  function setQueueOnLocalStorage() {
-    if (queue.length == 0) return;
-    const queueString = JSON.stringify(queue);
-    localStorage.setItem("queuedAudios", queueString);
+  function persistQueue(next: IAudio[]) {
+    if (next.length === 0) localStorage.removeItem("queuedAudios");
+    else localStorage.setItem("queuedAudios", JSON.stringify(next));
   }
 
   function shuffleQueue() {
-    setQueue((prev) => {
-      if (prev.length <= 1) return prev;
+    if (queue.length <= 1) return;
 
-      const currentAudio = prev[queuePointer];
+    const currentAudio = queue[queuePointer];
+    const remaining = queue.filter((_, idx) => idx !== queuePointer);
 
-      const remaining = prev.filter((_, idx) => idx !== queuePointer);
+    for (let i = remaining.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+    }
 
-      for (let i = remaining.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
-      }
-
-      setPointer(0);
-      return [currentAudio, ...remaining];
-    });
-    setQueueOnLocalStorage();
+    const shuffled = [currentAudio, ...remaining];
+    setQueue(shuffled);
+    setPointer(0);
+    persistQueue(shuffled);
   }
 
   function clearQueue() {
@@ -112,7 +108,7 @@ export function QueueContextProvider({ children }: { children: ReactNode }) {
     ];
 
     setQueue(newQueue);
-    setQueueOnLocalStorage();
+    persistQueue(newQueue);
     if (first) setPointer(0);
     noticeContext.sendNotice({
       success: true,

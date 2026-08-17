@@ -1,38 +1,91 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Pause,
+  Play,
+  Repeat,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { IAudio } from "../models/IAudio";
 import { useQueueContext } from "../context/QueueContext";
 import { useAudioCatalog } from "../hooks/useAudioCatalog";
+import { IconButton } from "./ui/IconButton";
+import { Slider } from "./ui/Slider";
+import { Artwork } from "./ui/Artwork";
+
+const LOAD_TIMEOUT_MS = 10_000;
 
 export function AudioControls() {
   const queueContext = useQueueContext();
   const audioCatalog = useAudioCatalog();
 
   const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState<string>("00:00");
   const [currentPlaying, setCurrent] = useState<IAudio | null>(null);
   const [totalDuration, setTotalDuration] = useState<string>("00:00");
 
   const audioPlayerRef = useRef<HTMLAudioElement>(null);
+  const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipGuardRef = useRef(false);
+  const currentIdRef = useRef<string | null>(null);
+  const queueContextRef = useRef(queueContext);
+
+  useEffect(() => {
+    queueContextRef.current = queueContext;
+  });
+
+  const clearLoadTimeout = useCallback(() => {
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
+  }, []);
+
+  const skipCurrent = useCallback(() => {
+    if (skipGuardRef.current) return;
+    skipGuardRef.current = true;
+    clearLoadTimeout();
+    setPlaying(false);
+    queueContextRef.current.playNext();
+  }, [clearLoadTimeout]);
 
   useEffect(() => {
     const nextAudio = queueContext.queue[queueContext.queuePointer];
-    if (!("mediaSession" in navigator)) return
-    if (nextAudio) {
-      setCurrent(nextAudio);
+
+    if (queueContext.queuePointer == -1 || !nextAudio) {
+      currentIdRef.current = null;
+      setCurrent(null);
+      setPlaying(false);
       setCurrentTime("00:00");
+      setTotalDuration("00:00");
+      return;
+    }
+
+    setCurrent(nextAudio);
+
+    if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: nextAudio.title,
         artist: nextAudio.artist,
         artwork: undefined
       });
     }
-    if (queueContext.queuePointer == -1) {
-      setCurrent(null);
-      setPlaying(false);
+
+    const idChanged = nextAudio.id !== currentIdRef.current;
+    currentIdRef.current = nextAudio.id;
+
+    if (idChanged) {
+      skipGuardRef.current = false;
+      clearLoadTimeout();
       setCurrentTime("00:00");
       setTotalDuration("00:00");
+      loadTimeoutRef.current = setTimeout(() => skipCurrent(), LOAD_TIMEOUT_MS);
     }
-  }, [queueContext.queuePointer, queueContext.queue]);
+  }, [queueContext.queuePointer, queueContext.queue, skipCurrent, clearLoadTimeout]);
 
   function updateDuration(audioDurationSeconds: number) {
     const formattedDuration =
@@ -60,7 +113,7 @@ export function AudioControls() {
     navigator.mediaSession.setActionHandler("nexttrack", () => queueContext.playNext())
     navigator.mediaSession.setActionHandler("previoustrack", () => queueContext.playPrevious())
   }, [queueContext])
-  
+
   useEffect(() => {
     if (!("mediaSession" in navigator)) return
     navigator.mediaSession.playbackState = playing ? "playing" : "paused"
@@ -80,6 +133,27 @@ export function AudioControls() {
     }
   }
 
+  const handleTogglePlayRef = useRef(handleTogglePlay);
+  useEffect(() => {
+    handleTogglePlayRef.current = handleTogglePlay;
+  });
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== " ") return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        target.closest("input, textarea, select, [contenteditable]")
+      )
+        return;
+      e.preventDefault();
+      handleTogglePlayRef.current();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   function handlePlayNext() {
     queueContext.playNext();
   }
@@ -92,7 +166,25 @@ export function AudioControls() {
     setTimeout(() => queueContext.playNext(), 2000);
   }
 
+  function seekToFraction(fraction: number) {
+    const player = audioPlayerRef.current;
+    if (!player || !currentPlaying) return;
+    if (!isFinite(player.duration)) return;
+    player.currentTime = Math.min(1, Math.max(0, fraction)) * player.duration;
+  }
+
+  function seekBy(deltaSeconds: number) {
+    const player = audioPlayerRef.current;
+    if (!player || !currentPlaying) return;
+    if (!isFinite(player.duration)) return;
+    player.currentTime = Math.min(
+      player.duration,
+      Math.max(0, player.currentTime + deltaSeconds),
+    );
+  }
+
   function handleMetadata() {
+    clearLoadTimeout();
     if (audioPlayerRef.current) {
       const audioDurationSeconds = audioPlayerRef.current.duration;
       if (!isNaN(audioDurationSeconds) && isFinite(audioDurationSeconds)) {
@@ -121,38 +213,34 @@ export function AudioControls() {
     }
   }
 
+  const playerDuration = audioPlayerRef.current?.duration ?? 0;
+  const playerCurrent = audioPlayerRef.current?.currentTime ?? 0;
+  const progressPercent =
+    playerDuration > 0 ? (playerCurrent / playerDuration) * 100 : 0;
+
   return (
-    <div className="h-24 shrink-0 flex items-center justify-between gap-4 px-6 border-t border-zinc-800 bg-zinc-900/95 backdrop-blur-md">
+    <div className="h-24 shrink-0 flex items-center justify-between gap-4 px-6 border-t border-border bg-surface/95 backdrop-blur-md">
       {/* Left — Now Playing */}
-      <div className="flex items-center gap-3 w-64 min-w-0">
+      <div className="flex items-center gap-3 w-[var(--width-panel)] min-w-0">
         {currentPlaying ? (
           <>
-            <div className="w-10 h-10 rounded-md bg-zinc-800 shrink-0 flex items-center justify-center text-zinc-600">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-                />
-              </svg>
-            </div>
+            <Artwork
+              seed={currentPlaying.title}
+              size={40}
+              alt={currentPlaying.title}
+              className="shadow-[0_0_18px_-4px_var(--accent)]"
+            />
             <div className="min-w-0">
-              <p className="text-sm font-medium text-zinc-100 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {currentPlaying.title}
               </p>
-              <p className="text-xs text-zinc-500 truncate">
+              <p className="text-xs text-muted truncate">
                 {currentPlaying.artist}
               </p>
             </div>
           </>
         ) : (
-          <div className="text-xs text-zinc-600">Nothing playing</div>
+          <div className="text-xs text-muted-faint">Nothing playing</div>
         )}
       </div>
 
@@ -160,124 +248,92 @@ export function AudioControls() {
       <div className="flex flex-col items-center gap-2 flex-1 max-w-xl">
         {/* Buttons */}
         <div className="flex items-center gap-2">
-          {/* Shuffle */}
-          <button
-            className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-            title="Shuffle"
-            onClick={queueContext.shuffleQueue}
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 3h5v5M4 20L21 3M16 21h5v-5M4 4l5 5"
-              />
-            </svg>
-          </button>
+          <IconButton label="Shuffle" onClick={queueContext.shuffleQueue}>
+            <Shuffle className="w-4 h-4" />
+          </IconButton>
 
-          {/* Previous */}
-          <button
-            onClick={handlePlayPrevious}
-            className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-            title="Previous"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
-            </svg>
-          </button>
+          <IconButton label="Previous" onClick={handlePlayPrevious}>
+            <SkipBack className="w-4 h-4" fill="currentColor" />
+          </IconButton>
 
-          {/* Play / Pause */}
           <button
             onClick={handleTogglePlay}
-            className="w-9 h-9 rounded-full bg-zinc-100 hover:bg-white text-zinc-900 flex items-center justify-center transition-colors shadow-md"
+            className="w-9 h-9 rounded-full bg-foreground hover:bg-foreground-soft text-background flex items-center justify-center transition-colors shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             title={playing ? "Pause" : "Play"}
+            aria-label={playing ? "Pause" : "Play"}
           >
             {playing ? (
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <rect x="5" y="4" width="4" height="16" rx="1" />
-                <rect x="15" y="4" width="4" height="16" rx="1" />
-              </svg>
+              <Pause className="w-4 h-4" fill="currentColor" />
             ) : (
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M7 4.5v15l13-7.5z" />
-              </svg>
+              <Play className="w-4 h-4" fill="currentColor" />
             )}
           </button>
-          {/* Next */}
-          <button
-            onClick={handlePlayNext}
-            className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-            title="Next"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z" />
-            </svg>
-          </button>
 
-          {/* Repeat */}
-          <button
-            className={`p-1.5 rounded-md transition-colors ${queueContext.repeating
-              ? "text-purple-400 bg-zinc-800"
-              : "text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800"
-              }`}
-            title="Repeat"
+          <IconButton label="Next" onClick={handlePlayNext}>
+            <SkipForward className="w-4 h-4" fill="currentColor" />
+          </IconButton>
+
+          <IconButton
+            label="Repeat"
+            active={queueContext.repeating}
             onClick={() => queueContext.toggleRepeat()}
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          </button>
+            <Repeat className="w-4 h-4" />
+          </IconButton>
         </div>
 
         {/* Progress bar */}
         <div className="w-full flex items-center gap-2">
-          <span className="text-xs tabular-nums text-zinc-500 w-10 text-right">
+          <span className="text-xs tabular-nums text-muted w-10 text-right">
             {currentTime}
           </span>
           <div
-            className="relative flex-1 h-1 bg-zinc-700 rounded-full group cursor-pointer"
+            role="slider"
+            tabIndex={0}
+            aria-label="Seek"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(progressPercent)}
+            aria-valuetext={`${currentTime} of ${totalDuration}`}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowRight") {
+                e.preventDefault();
+                seekBy(5);
+              } else if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                seekBy(-5);
+              } else if (e.key === "Home") {
+                e.preventDefault();
+                seekToFraction(0);
+              } else if (e.key === "End") {
+                e.preventDefault();
+                seekToFraction(1);
+              }
+            }}
+            className="relative flex-1 h-1 bg-surface-3 rounded-full group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
             onClick={(e) => {
-              if (!audioPlayerRef.current || !currentPlaying) return;
               const rect = e.currentTarget.getBoundingClientRect();
-              const pct = (e.clientX - rect.left) / rect.width;
-              audioPlayerRef.current.currentTime =
-                pct * audioPlayerRef.current.duration;
+              seekToFraction((e.clientX - rect.left) / rect.width);
             }}
           >
             <div
-              className="absolute inset-y-0 left-0 bg-zinc-100 group-hover:bg-purple-400 rounded-full transition-colors"
-              style={{
-                width: audioPlayerRef.current?.duration
-                  ? `${(audioPlayerRef.current.currentTime / audioPlayerRef.current.duration) * 100}%`
-                  : "0%",
-              }}
+              className="absolute inset-y-0 left-0 bg-foreground group-hover:bg-accent rounded-full transition-colors"
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <span className="text-xs tabular-nums text-zinc-500 w-10">
+          <span className="text-xs tabular-nums text-muted w-10">
             {totalDuration}
           </span>
         </div>
 
         {currentPlaying && (
           <audio
+            key={currentPlaying.id}
             ref={audioPlayerRef}
-            onPlay={() => setPlaying(true)}
+            onPlay={() => {
+              setPlaying(true);
+              clearLoadTimeout();
+            }}
             onPause={() => setPlaying(false)}
             src={
               currentPlaying.local
@@ -287,37 +343,31 @@ export function AudioControls() {
             onEnded={handleAudioEnd}
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={handleMetadata}
+            onError={() => skipCurrent()}
             autoPlay
           />
         )}
       </div>
 
       {/* Right — Volume */}
-      <div className="flex items-center gap-2 w-64 justify-end">
-        <button
-          className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+      <div className="flex items-center gap-2 w-[var(--width-panel)] justify-end">
+        <IconButton
+          label={muted ? "Unmute" : "Mute"}
           onClick={() => {
-            if (audioPlayerRef.current)
-              audioPlayerRef.current.muted = !audioPlayerRef.current.muted;
+            const player = audioPlayerRef.current;
+            if (player) {
+              player.muted = !player.muted;
+              setMuted(player.muted);
+            }
           }}
-          title="Mute"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-4-4H5a1 1 0 01-1-1v-2a1 1 0 011-1h3l4-4z"
-            />
-          </svg>
-        </button>
-        <input
-          type="range"
+          {muted ? (
+            <VolumeX className="w-4 h-4" />
+          ) : (
+            <Volume2 className="w-4 h-4" />
+          )}
+        </IconButton>
+        <Slider
           min={0}
           max={1}
           step={0.01}
@@ -326,7 +376,7 @@ export function AudioControls() {
             if (audioPlayerRef.current)
               audioPlayerRef.current.volume = parseFloat(e.target.value);
           }}
-          className="w-24 h-1 appearance-none rounded-full bg-zinc-700 accent-zinc-100 cursor-pointer"
+          className="w-24 accent-foreground"
         />
       </div>
     </div>

@@ -1,5 +1,7 @@
-import { Modal } from "./Modal";
 import { useState } from "react";
+import { ChevronRight, Plus } from "lucide-react";
+import { Modal } from "./ui/Modal";
+import { MenuItem, MenuSeparator } from "./ui/Menu";
 import { useContextMenu } from "./ContextMenu";
 import { IPlaylist } from "../models/IPlaylist";
 import { useQueueContext } from "../context/QueueContext";
@@ -31,54 +33,35 @@ export function PlaylistSection() {
     <div>
       <button
         onClick={() => setPlaylistsOpen(!playlistsOpen)}
-        className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+        className="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm font-medium text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
       >
         <span>Playlists</span>
-        <svg
+        <ChevronRight
           className={`w-3 h-3 transition-transform duration-200 ${playlistsOpen ? "rotate-90" : ""}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
+        />
       </button>
 
       {playlistsOpen && (
         <>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="w-full flex items-center gap-1.5 px-2 py-1.5 mt-0.5 rounded-md text-sm text-purple-400 hover:text-purple-300 hover:bg-zinc-800 transition-colors"
+            className="w-full flex items-center gap-1.5 px-2 py-1.5 mt-0.5 rounded-md text-sm text-accent hover:text-accent-hover hover:bg-surface-2 transition-colors"
           >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
+            <Plus className="w-3.5 h-3.5" />
             Create Playlist
           </button>
 
-          <ul className="mt-0.5 ml-2 border-l border-zinc-800 pl-2 flex flex-col gap-0.5">
+          <ul className="mt-0.5 ml-2 border-l border-border pl-2 flex flex-col gap-0.5">
             {Array.from(playlistContext.playlists).map(([key, value]) => (
               <li key={key} onContextMenu={(e) => handleRightClick(e, value)}>
                 <button
                   onClick={() => playlistContext.setCurrentPlaylist(key)}
-                  className="w-full text-left px-2 py-1.5 rounded-md text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors truncate"
+                  className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-sm text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
                 >
-                  {value.name}
+                  <span className="truncate">{value.name}</span>
+                  <span className="text-xs text-muted-faint tabular-nums shrink-0">
+                    {value.audios.length}
+                  </span>
                 </button>
               </li>
             ))}
@@ -87,40 +70,38 @@ export function PlaylistSection() {
       )}
 
       <ContextMenu>
-        <button
-          onClick={playPlaylist}
-          className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-        >
-          Play now
-        </button>
-        <button
+        <MenuItem onClick={playPlaylist}>Play now</MenuItem>
+        <MenuItem
           onClick={() => {
             if (contextMenu) queueContext.queuePlaylist(contextMenu.data);
             closeContextMenu();
           }}
-          className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
         >
           Add to queue
-        </button>
+        </MenuItem>
 
-        <hr className="my-1 mx-3 border-zinc-700/40" />
+        <MenuSeparator />
 
-        <button
+        <MenuItem
+          tone="danger"
           onClick={() => {
             if (contextMenu) deletePlaylist(contextMenu.data.id);
           }}
-          className="w-full text-left px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-zinc-800 transition-colors"
         >
           Delete Playlist
-        </button>
+        </MenuItem>
       </ContextMenu>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        ariaLabel="Create Playlist"
+      >
         <div className="flex flex-col gap-2 space-y-1 pb-1">
-          <h2 className="text-sm font-semibold text-zinc-100">
+          <h2 className="text-sm font-semibold text-foreground">
             Create Playlist
           </h2>
-          <hr className="border-zinc-800 my-4" />
+          <hr className="border-border my-4" />
           <CreatePlaylistForm onClose={() => setIsModalOpen(false)} />
         </div>
       </Modal>

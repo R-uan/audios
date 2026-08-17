@@ -1,6 +1,11 @@
+import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import { IAudio } from "@/app/models/IAudio";
-import { Modal } from "@/app/components/Modal";
-import { ReactNode, useEffect, useState } from "react";
+import { Modal } from "@/app/components/ui/Modal";
+import { Input } from "../ui/Input";
+import { Button } from "../ui/Button";
+import { Field } from "../ui/Form";
+import { TagInput } from "../ui/TagInput";
 
 interface UpdateAudioFormProps {
   audio: IAudio;
@@ -13,14 +18,12 @@ export function UpdateAudioForm({
   onClose,
   onSave,
 }: UpdateAudioFormProps) {
-  const [tagInput, setTagInput] = useState("");
   const [form, setForm] = useState<IAudio>(audio);
   const [addTags, setAddTags] = useState<string[]>([]);
   const [removeTags, setRemovedTags] = useState<string[]>([]);
 
   useEffect(() => {
     setForm(audio);
-    setTagInput("");
   }, [audio]);
 
   const set = <K extends keyof IAudio>(key: K, value: IAudio[K]) =>
@@ -35,19 +38,13 @@ export function UpdateAudioForm({
       metadata: { ...prev.metadata, [key]: value },
     }));
 
-  const handleAddTag = () => {
-    const tag = tagInput.trim();
-    if (!tag || form.metadata.tags.includes(tag)) {
-      setTagInput("");
-      return;
-    }
+  const handleAddTag = (tag: string) => {
     setMeta("tags", [...form.metadata.tags, tag]);
     if (removeTags.includes(tag)) {
       setRemovedTags(removeTags.filter((t) => t !== tag)); // un-mark for removal
     } else {
       setAddTags([...addTags, tag]);
     }
-    setTagInput("");
   };
 
   const handleRemoveTag = (tag: string) => {
@@ -62,92 +59,68 @@ export function UpdateAudioForm({
     }
   };
 
-  const handleTagKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddTag();
-    }
-    if (e.key === "Backspace" && !tagInput && form.metadata.tags.length > 0)
-      handleRemoveTag(form.metadata.tags[form.metadata.tags.length - 1]);
-  };
-
   return (
-    <Modal isOpen={true} onClose={onClose}>
+    <Modal isOpen={true} onClose={onClose} ariaLabel="Edit Audio">
       <div className="space-y-5">
         {/* Modal title */}
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-zinc-100">Edit Audio</h2>
+          <h2 className="text-sm font-semibold text-foreground">Edit Audio</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+            aria-label="Close"
+            className="p-1 rounded-md text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <hr className="border-zinc-800" />
+        <hr className="border-border" />
 
         {/* Core fields */}
         <div className="space-y-3">
           <Field label="Title">
-            <input
+            <Input
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
-              className={inputCls}
               placeholder="Track title"
             />
           </Field>
 
           <Field label="Artist">
-            <input
+            <Input
               value={form.artist}
               onChange={(e) => set("artist", e.target.value)}
-              className={inputCls}
               placeholder="Artist name"
             />
           </Field>
 
           <Field label="Link">
-            <input
+            <Input
               value={form.link}
               onChange={(e) => set("link", e.target.value)}
-              className={inputCls}
               placeholder="https://..."
             />
           </Field>
           <Field label="Source">
-            <input
+            <Input
               value={form.source}
               onChange={(e) => set("source", e.target.value)}
-              className={inputCls}
               placeholder="Audio source URL or path"
             />
           </Field>
         </div>
 
-        <hr className="border-zinc-800" />
+        <hr className="border-border" />
 
         {/* Metadata */}
         <div className="space-y-3">
-          <p className="text-xs font-medium uppercase tracking-widest text-zinc-600">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-faint">
             Metadata
           </p>
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Release Year">
-              <input
+              <Input
                 type="number"
                 value={form.metadata.releaseYear ?? ""}
                 onChange={(e) =>
@@ -156,16 +129,14 @@ export function UpdateAudioForm({
                     e.target.value ? parseInt(e.target.value) : null,
                   )
                 }
-                className={inputCls}
                 placeholder="2024"
               />
             </Field>
 
             <Field label="Genre">
-              <input
+              <Input
                 value={form.metadata.genre ?? ""}
                 onChange={(e) => setMeta("genre", e.target.value || null)}
-                className={inputCls}
                 placeholder="e.g. Jazz"
               />
             </Field>
@@ -173,42 +144,12 @@ export function UpdateAudioForm({
 
           {/* Tags */}
           <Field label="Tags">
-            <div className="flex flex-wrap gap-1.5 p-2 min-h-10 rounded-md bg-zinc-800 border border-zinc-700 focus-within:ring-1 focus-within:ring-purple-500 focus-within:border-transparent transition-all">
-              {form.metadata.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="flex items-center gap-1 px-1.5 py-0.5 text-xs bg-zinc-700 border border-zinc-600 text-zinc-300 rounded"
-                >
-                  {tag}
-                  <button
-                    onClick={() => handleRemoveTag(tag)}
-                    className="text-zinc-500 hover:text-red-400 transition-colors"
-                  >
-                    <svg
-                      className="w-2.5 h-2.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2.5}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </span>
-              ))}
-              <input
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                className="flex-1 min-w-20 bg-transparent text-xs text-zinc-200 placeholder-zinc-600 outline-none"
-                placeholder={form.metadata.tags.length === 0 ? "Add tags…" : ""}
-              />
-            </div>
-            <p className="mt-1 text-xs text-zinc-600">
+            <TagInput
+              tags={form.metadata.tags}
+              onAdd={handleAddTag}
+              onRemove={handleRemoveTag}
+            />
+            <p className="mt-1 text-xs text-muted-faint">
               Enter to add · Backspace to remove last
             </p>
           </Field>
@@ -216,38 +157,22 @@ export function UpdateAudioForm({
 
         {/* Actions */}
         <div className="flex gap-3 pt-1">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm rounded-md bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
-          >
+          <Button variant="secondary" className="flex-1" onClick={onClose}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            className="flex-1"
             onClick={() => {
               onSave(form, addTags, removeTags);
               onClose();
             }}
             disabled={!form.title.trim()}
-            className="flex-1 px-4 py-2 text-sm rounded-md bg-purple-600 text-white hover:bg-purple-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Save
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>
-  );
-}
-
-// Helpers
-
-const inputCls =
-  "w-full px-3 py-2 text-sm rounded-md bg-zinc-800 border border-zinc-700 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-transparent transition-all";
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <label className="block text-xs text-zinc-500">{label}</label>
-      {children}
-    </div>
   );
 }

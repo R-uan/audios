@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Input } from "../ui/Input";
+import { Button } from "../ui/Button";
 import { useQueueContext } from "@/app/context/QueueContext";
 import { usePlaylistContext } from "@/app/context/PlaylistContext";
 
@@ -28,12 +30,12 @@ export function CreatePlaylistForm({ onClose }: CreatePlaylistFormProps) {
 
   return (
     <div className="space-y-3">
-      <input
+      <Input
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         placeholder="Enter playlist name..."
-        className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+        className="px-4 py-2 rounded-lg focus:ring-2"
       />
       <div className="flex items-center gap-2">
         <input
@@ -41,29 +43,27 @@ export function CreatePlaylistForm({ onClose }: CreatePlaylistFormProps) {
           type="checkbox"
           checked={isChecked}
           onChange={(e) => setIsChecked(e.target.checked)}
-          className="w-4 h-4 rounded accent-purple-500 cursor-pointer"
+          className="w-4 h-4 rounded accent-accent cursor-pointer"
         />
         <label
           htmlFor="queue-checkbox"
-          className="text-sm text-zinc-400 cursor-pointer select-none"
+          className="text-sm text-muted cursor-pointer select-none"
         >
           Add queue audios to the playlist
         </label>
       </div>
       <div className="flex gap-3 pt-2">
-        <button
-          onClick={onClose}
-          className="flex-1 px-4 py-2 text-sm rounded-md bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
-        >
+        <Button variant="secondary" className="flex-1" onClick={onClose}>
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="primary"
+          className="flex-1"
           onClick={createEmptyPlaylist}
           disabled={!inputValue.trim()}
-          className="flex-1 px-4 py-2 text-sm rounded-md bg-purple-600 text-white hover:bg-purple-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Create
-        </button>
+        </Button>
       </div>
     </div>
   );

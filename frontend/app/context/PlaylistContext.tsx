@@ -44,9 +44,7 @@ export function PlaylistContextProvider({ children }: { children: ReactNode }) {
         message: `Could not create playlist "${data.name}": ${response.statusCode}`,
       });
     } else {
-      const newPlaylistMap = playlists;
-      newPlaylistMap.set(response.id, response);
-      setPlaylists(newPlaylistMap);
+      setPlaylists((prev) => new Map(prev).set(response.id, response));
 
       noticeContext.sendNotice({
         id: response.id,
@@ -69,9 +67,11 @@ export function PlaylistContextProvider({ children }: { children: ReactNode }) {
         message: `Could not delete playlist: ${response.statusCode}`,
       });
     } else {
-      const newPlaylistMap = playlists;
-      newPlaylistMap.delete(id);
-      setPlaylists(newPlaylistMap);
+      setPlaylists((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
 
       noticeContext.sendNotice({
         id: `create-playlist-${id}`,
