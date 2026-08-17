@@ -1,0 +1,44 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    container_name: aadevcache 
+    command: redis-server --appendonly yes
+
+    ports:
+      - "6375:6379"
+    
+    volumes:
+      - aa_dev_redis_volume:/data
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    container_name: aadevdb 
+
+    environment:
+      POSTGRES_DB: aateste
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    
+    ports:
+      - "5435:5432"
+    
+    volumes:
+      - aa_dev_postgres_volume:/var/lib/postgresql/data
+    
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  aa_dev_redis_volume:
+  aa_dev_postgres_volume:

@@ -1,0 +1,77 @@
+using AudioArchive.Database.Entity;
+using Microsoft.EntityFrameworkCore;
+
+namespace AudioArchive.Database
+{
+  public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbContext(options)
+  {
+    public DbSet<Tag> Tags { get; set; }
+    public DbSet<Audio> Audios { get; set; }
+    public DbSet<Artist> Artists { get; set; }
+    public DbSet<Playlist> Playlists { get; set; }
+    public DbSet<ArtistSocial> ArtistSocials { get; set; }
+    public DbSet<AudioMetadata> AudioMetadata { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+      modelBuilder.Entity<Artist>(artist => {
+        artist.ToTable("artists");
+        artist.HasKey(a => a.Id);
+        artist.HasIndex(a => a.Name).IsUnique();
+
+        artist.HasMany(a => a.Socials)
+              .WithOne(s => s.Artist)
+              .HasForeignKey(s => s.ArtistId)
+              .OnDelete(DeleteBehavior.Cascade);
+
+        artist.HasMany(a => a.Audios)
+              .WithOne(a => a.Artist)
+              .HasForeignKey(a => a.ArtistId)
+              .OnDelete(DeleteBehavior.Cascade);
+      });
+
+      modelBuilder.Entity<Audio>(audio => {
+        audio.ToTable("audios");
+        audio.HasKey(a => a.Id);
+        audio.HasOne(a => a.Metadata)
+             .WithOne(m => m.Audio)
+             .HasForeignKey<AudioMetadata>(m => m.AudioId)
+             .OnDelete(DeleteBehavior.Cascade);
+      });
+
+      modelBuilder.Entity<AudioMetadata>(metadata => {
+        metadata.ToTable("audio_metadata");
+        metadata.HasIndex(am => am.AudioId);
+        metadata.HasKey(m => m.Id);
+        metadata.HasMany(m => m.Tags)
+                .WithMany(t => t.AudioMetadatas)
+                .UsingEntity(j => {
+                  j.ToTable("audio_metadata_tags");
+                  j.HasIndex("TagsId");
+                });
+      });
+
+      modelBuilder.Entity<Tag>(tag => {
+        tag.ToTable("tags");
+        tag.HasKey(t => t.Id);
+        tag.HasIndex(t => t.Name).IsUnique();
+      });
+
+      modelBuilder.Entity<Playlist>(playlist => {
+        playlist.ToTable("playlists");
+        playlist.HasMany(p => p.Audios)
+                .WithMany(a => a.Playlists)
+                .UsingEntity(j => {
+                  j.ToTable("playlist_audios");
+                });
+      });
+
+      modelBuilder.Entity<ArtistSocial>(socials => {
+        socials.ToTable("artist_socials");
+        socials.HasOne(s => s.Artist)
+               .WithMany(a => a.Socials);
+      });
+
+      base.OnModelCreating(modelBuilder);
+    }
+  }
+}

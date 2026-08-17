@@ -1,0 +1,152 @@
+using AudioArchive.Models;
+using AudioArchive.Models.Views;
+using AudioArchive.Services;
+using AudioArchive.Database;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using AudioArchive.Shared;
+
+namespace AudioArchive.Controllers
+{
+  [ApiController]
+  [Route("api/audio")]
+  public class AudioController : ControllerBase
+  {
+    private readonly IAudioService audioService;
+    private readonly ICachingService cachingService;
+    private readonly DatabaseContext databaseContext;
+
+    private readonly string CacheGroup = "audio";
+
+    public AudioController(DatabaseContext database, IAudioService service, ICachingService caching) {
+      this.databaseContext = database;
+      this.audioService = service;
+      this.cachingService = caching;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAudios() {
+      var audios = await cachingService.GetAsync(CacheGroup, "all", () => {
+        return databaseContext.Audios
+              .Include(a => a.Metadata)
+              .Select(audio => new AudioView {
+                Id = audio.Id,
+                Title = audio.Title,
+                Artist = audio.Artist.Name,
+                Source = audio.Source,
+                Link = audio.Link,
+                Local = audio.Local,
+                AddedAt = audio.AddedAt,
+                Metadata = new AudioMetadataView {
+                  Duration = audio.Metadata.Duration,
+                  Genre = audio.Metadata.Genre,
+                  ReleaseYear = audio.Metadata.ReleaseYear,
+                  Tags = audio.Metadata.Tags.Select(t => t.Name).Order().ToList(),
+                }
+              }).OrderBy(a => a.Title).ToListAsync();
+      });
+
+      return Ok(new {
+        Data = audios,
+        Count = audios == null ? 0 : audios.Count,
+        AudiosOverallDuration = audios?.Sum(a => a.Metadata.Duration),
+      });
+    }
+
+    [HttpGet("{audioId}")]
+    public async Task<IActionResult> GetAudio([FromRoute] string audioId) {
+      if (Guid.TryParse(audioId, out var audioGuid))
+        throw new BadRequestException(
+          Message: "Could not parse given string into a valid guid.",
+          Target: audioId
+        );
+
+      var audio = await databaseContext.Audios.Include(a => a.Artist)
+        .Include(a => a.Metadata).ThenInclude(m => m.Tags)
+        .Where(a => a.Id == audioGuid).FirstOrDefaultAsync() ??
+          throw new NotFoundException(
+            Message: "Could not find audio entry.",
+            Target: audioId
+          );
+
+      return base.Ok(AudioView.From(audio));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> PostAudio([FromBody] PostAudioRequest request) {
+      return base.Ok(await audioService.StoreAudio(request));
+    }
+
+    [HttpPost("bulk")]
+    public async Task<IActionResult> PostMultipleAudios([FromBody] List<PostAudioRequest> request) {
+      List<PostAudioResult> savedAudios = [];
+      List<string> failedAdditions = [];
+      List<string> duplicatedAudios = [];
+
+      foreach (var entry in request) {
+        try {
+          var audio = await audioService.StoreAudio(entry);
+          savedAudios.Add(audio);
+        } catch (Exception e) {
+          if (e is DuplicatedAudioException) {
+            duplicatedAudios.Add(entry.Link ?? entry.Source);
+            continue;
+          } else {
+            duplicatedAudios.Add(entry.Link ?? entry.Source);
+            continue;
+          }
+        }
+      }
+
+      return base.Ok(new {
+        SavedAudios = savedAudios,
+        FailedAdditions = failedAdditions,
+        DuplicatedAudios = duplicatedAudios,
+      });
+    }
+
+    [HttpDelete("{audioId}")]
+    public async Task<IActionResult> DeleteAudio([FromRoute] string audioId) {
+      if (!Guid.TryParse(audioId, out var audioGuid))
+        throw new BadRequestException(
+          Message: "Could not parse given string into a valid guid.",
+          Target: audioId
+        );
+
+      var audio = await databaseContext.Audios.FindAsync(audioGuid) ??
+        throw new NotFoundException(
+          Message: "Could not find audio entry.",
+          Target: audioId
+        );
+
+      databaseContext.Audios.Remove(audio);
+      await databaseContext.SaveChangesAsync();
+
+      return Ok(new {
+        Message = "Audio successfully deleted.",
+        Target = audioId
+      });
+    }
+
+    [HttpGet("q")]
+    public async Task<IActionResult> QueryAudios([FromQuery] AudioSearchParams parameters) {
+      var key = HttpContext.Request.QueryString.ToString();
+      var audios = (await cachingService.GetAsync(CacheGroup, key, () => {
+        return audioService.QueryAudios(parameters);
+      }))?.Select(AudioView.From).ToList();
+
+      return base.Ok(new {
+        Data = audios,
+        Count = audios == null ? 0 : audios.Count
+      });
+    }
+
+    [HttpPatch("{audioId}")]
+    public async Task<IActionResult>
+      PatchAudio([FromRoute] Guid audioId, [FromBody] PatchAudioRequest request) {
+      var operation = await audioService.UpdateAudio(audioId, request);
+      var audioView = AudioView.From(operation);
+      return base.Ok(audioView);
+    }
+  }
+}
