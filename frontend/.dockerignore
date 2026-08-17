@@ -1,0 +1,10 @@
+node_modules/
+.nix-shell/
+.git/
+.gitignore
+.env/
+*.log
+dist/
+*.md
+.next/
+out/

@@ -1,0 +1,42 @@
+export interface IAudio {
+  id: string;
+  title: string;
+  artist: string;
+  link: string;
+  local: boolean;
+  source: string;
+  addedAt: string;
+  updatedAt: string;
+  metadata: {
+    releaseYear: number | null;
+    genre: string | null;
+    duration: number | null;
+    mood: string | null;
+    tags: string[];
+  };
+}
+
+export interface IPostAudio {
+  title: string;
+  artist: string;
+  link: string | null;
+  source: string;
+  local: boolean;
+  releaseYear: number | null;
+  genre: string | null;
+  duration: number | null;
+  tags: string[];
+}
+
+export interface IUpdateAudio {
+  title: string;
+  artist: string;
+  link: string;
+  source: string;
+  releaseYear: number | null;
+  genre: string | null;
+  duration: number | null;
+  mood: string | null;
+  addTags: string[];
+  removeTags: string[];
+}
