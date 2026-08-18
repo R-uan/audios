@@ -51,6 +51,26 @@
   }
 </section>
 
+<section class="panel-section">
+  <h2>Create tag</h2>
+
+  <div class="panel-field">
+    <label>Name</label>
+    <input @bind="NewTagName" placeholder="Tag name" />
+  </div>
+
+  <div class="panel-field">
+    <label>Description (optional)</label>
+    <input @bind="NewTagDescription" placeholder="Description" />
+  </div>
+
+  <button @onclick="RunCreate" disabled="@(IsBusy || string.IsNullOrWhiteSpace(NewTagName))">Add tag</button>
+
+  @if (CreateResult is not null) {
+    <p>Created tag "@CreateResult".</p>
+  }
+</section>
+
 @code {
   [Inject] private ITagService TagService { get; set; } = default!;
   [Inject] private ICachingService Caching { get; set; } = default!;
@@ -58,10 +78,13 @@
   private List<Tag> AllTags { get; set; } = [];
   private string? SourceTagValue { get; set; }
   private string? TargetTagValue { get; set; }
+  private string? NewTagName { get; set; }
+  private string? NewTagDescription { get; set; }
 
   private bool IsBusy { get; set; }
   private int? CleanupResult { get; set; }
   private int? MergeResult { get; set; }
+  private string? CreateResult { get; set; }
   private string? Error { get; set; }
 
   protected override async Task OnInitializedAsync() {
@@ -102,6 +125,26 @@
       await Caching.DeleteGroupAsync("audio");
       SourceTagValue = null;
       TargetTagValue = null;
+      await LoadTags();
+    } catch (Exception e) {
+      Error = e.Message;
+    } finally {
+      IsBusy = false;
+    }
+  }
+
+  private async Task RunCreate() {
+    if (string.IsNullOrWhiteSpace(NewTagName)) return;
+
+    IsBusy = true;
+    CreateResult = null;
+    Error = null;
+    try {
+      var tag = await TagService.CreateTag(NewTagName, NewTagDescription);
+      CreateResult = tag.Name;
+      await Caching.DeleteGroupAsync("tag");
+      NewTagName = null;
+      NewTagDescription = null;
       await LoadTags();
     } catch (Exception e) {
       Error = e.Message;

@@ -24,6 +24,23 @@ namespace AudioArchive.Services
       return await database.Tags.AsNoTracking().OrderBy(t => t.Name).ToListAsync();
     }
 
+    public async Task<Tag> CreateTag(string name, string? description = null) {
+      if (string.IsNullOrWhiteSpace(name))
+        throw new BadRequestException("Tag name is required.", name ?? "");
+
+      var tag = new Tag(name.Trim()) {
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim()
+      };
+
+      if (await database.Tags.AnyAsync(t => t.Name.ToLower() == tag.Name.ToLower()))
+        throw new BadRequestException("Tag already exists.", tag.Name);
+
+      await database.Tags.AddAsync(tag);
+      await database.SaveChangesAsync();
+
+      return tag;
+    }
+
     public async Task<int> MergeTags(Guid sourceTagId, Guid targetTagId) {
       if (sourceTagId == targetTagId)
         throw new BadRequestException("Source and target tags must be different.", sourceTagId.ToString());
