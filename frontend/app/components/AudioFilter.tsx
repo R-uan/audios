@@ -37,7 +37,7 @@ export function AudioFilter() {
         value={filters.name}
         onChange={(e) => set("name", e.target.value)}
         placeholder="Title..."
-        className="px-2 py-1.5 text-xs"
+        className="w-full px-2 py-1.5 text-xs rounded-md bg-surface-2 border border-border-strong text-foreground placeholder-muted-faint focus:outline-none focus:ring-1 focus:ring-accent focus:border-transparent transition-all"
       />
 
       {/* Artist */}
