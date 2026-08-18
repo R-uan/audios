@@ -1,3 +1,4 @@
+using AudioArchive.Components;
 using AudioArchive.Extensions;
 using AudioArchive.Shared;
 using Microsoft.AspNetCore.StaticFiles;
@@ -16,6 +17,7 @@ var app = builder.Build();
 var fileProvider = new PhysicalFileProvider(staticFileProvider);
 var contentTypeProvider = new FileExtensionContentTypeProvider();
 app.UseMiddleware<CachingMiddleware>();
+app.UseStaticFiles();
 
 contentTypeProvider.Mappings[".mp3"] = "audio/mpeg";
 contentTypeProvider.Mappings[".flac"] = "audio/flac";
@@ -42,6 +44,10 @@ app.UseDirectoryBrowser(new DirectoryBrowserOptions {
 app.UseExceptionHandler();
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
+app.UseAntiforgery();
 app.MapControllers();
+
+app.MapRazorComponents<App>()
+  .AddInteractiveServerRenderMode();
 
 app.Run();
