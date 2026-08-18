@@ -1,0 +1,70 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+        - NEXT_PUBLIC_MEDIA_URL=http://localhost:5000/media
+    container_name: audio_archive_frontend
+    restart: unless-stopped
+
+    ports:
+      - "3099:3000"
+
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+      - NEXT_PUBLIC_MEDIA_URL=http://localhost:5000/media
+
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    container_name: audio_archive_backend
+    restart: unless-stopped
+    
+    ports:
+      - "5000:8080"
+
+    volumes:
+      - /mnt/hdd/home/music:/mnt/hdd/home/music:ro 
+      - /mnt/hdd/home/documents/logs/audio-archive:/app/logs
+
+    environment:
+      - StaticFiles=/mnt/hdd/home/music
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Redis=redis:6379
+      - ConnectionStrings__Postgres=Host=bny_db_prod;Port=5432;Database=audio_archive;Username=root;Password=root
+
+    networks:
+      - default
+      - bny_shared
+
+    depends_on:
+      redis:
+        condition: service_healthy
+  
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    container_name: audio_archive_redis 
+    command: redis-server --appendonly yes
+
+    ports:
+      - "6374:6379"
+    
+    volumes:
+      - audio_archive_cache_volume:/data
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  audio_archive_cache_volume:
+
+networks:
+  bny_shared:
+    external: true
