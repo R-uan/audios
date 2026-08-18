@@ -50,3 +50,11 @@ body {
   padding: 1.5rem;
   flex: 1;
 }
+
+.panel-section {
+  margin-bottom: 1.5rem;
+}
+
+.panel-error {
+  color: #ff6b6b;
+}

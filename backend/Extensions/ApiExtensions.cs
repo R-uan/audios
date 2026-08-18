@@ -10,10 +10,10 @@ namespace AudioArchive.Extensions
       services.AddControllers();
       services.AddProblemDetails();
 
-      services.AddHostedService<TagCleanupService>();
       services.AddScoped<IAudioService, AudioService>();
       services.AddSingleton<ICachingService, CachingService>();
       services.AddScoped<IArtistService, ArtistService>();
+      services.AddScoped<ITagService, TagService>();
       services.AddExceptionHandler<GlobalExceptionHandler>();
       services.AddTransient<CachingMiddleware>();
 

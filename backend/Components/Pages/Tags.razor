@@ -1,0 +1,41 @@
+@page "/panel/tags"
+
+<PageTitle>Tags</PageTitle>
+
+<h1>Tags</h1>
+
+<section class="panel-section">
+  <p>Removes tags that are no longer associated with any audio.</p>
+  <button @onclick="RunCleanup" disabled="@IsCleaning">Clean up orphan tags</button>
+</section>
+
+@if (Result is not null) {
+  <p>Deleted @Result orphan tag(s).</p>
+}
+
+@if (Error is not null) {
+  <p class="panel-error">@Error</p>
+}
+
+@code {
+  [Inject] private ITagService TagService { get; set; } = default!;
+  [Inject] private ICachingService Caching { get; set; } = default!;
+
+  private bool IsCleaning { get; set; }
+  private int? Result { get; set; }
+  private string? Error { get; set; }
+
+  private async Task RunCleanup() {
+    IsCleaning = true;
+    Result = null;
+    Error = null;
+    try {
+      Result = await TagService.CleanupOrphanTags();
+      await Caching.DeleteGroupAsync("tag");
+    } catch (Exception e) {
+      Error = e.Message;
+    } finally {
+      IsCleaning = false;
+    }
+  }
+}
