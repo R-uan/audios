@@ -49,7 +49,7 @@ export function TagInput({
     if (e.key === "Enter") {
       e.preventDefault();
       const first = filtered[0];
-      if (first) commit(first);
+      commit(first ?? input);
     }
     if (e.key === "Backspace" && !input && tags.length > 0)
       onRemove(tags[tags.length - 1]);

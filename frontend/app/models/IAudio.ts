@@ -6,7 +6,7 @@ export interface IAudio {
   local: boolean;
   source: string;
   addedAt: string;
-  updatedAt: string;
+  updatedAt: string | null;
   metadata: {
     releaseYear: number | null;
     genre: string | null;

@@ -85,7 +85,10 @@ export function useAudioCatalog() {
         filters.excludeTags.some((t) => a.metadata.tags.includes(t))
       )
         return false;
-      if (cutoff && new Date(a.updatedAt) < cutoff) return false;
+      if (cutoff) {
+        const updated = a.updatedAt ? new Date(a.updatedAt) : new Date(a.addedAt);
+        if (updated < cutoff) return false;
+      }
       return true;
     });
 
