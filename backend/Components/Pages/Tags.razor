@@ -4,38 +4,109 @@
 
 <h1>Tags</h1>
 
-<section class="panel-section">
-  <p>Removes tags that are no longer associated with any audio.</p>
-  <button @onclick="RunCleanup" disabled="@IsCleaning">Clean up orphan tags</button>
-</section>
-
-@if (Result is not null) {
-  <p>Deleted @Result orphan tag(s).</p>
-}
-
 @if (Error is not null) {
   <p class="panel-error">@Error</p>
 }
+
+<section class="panel-section">
+  <h2>Clean up orphan tags</h2>
+  <p>Removes tags that are no longer associated with any audio.</p>
+  <button @onclick="RunCleanup" disabled="@IsBusy">Clean up orphan tags</button>
+  @if (CleanupResult is not null) {
+    <p>Deleted @CleanupResult orphan tag(s).</p>
+  }
+</section>
+
+<section class="panel-section">
+  <h2>Merge tags</h2>
+  <p>Moves every audio from one tag to another, then deletes the source tag.</p>
+
+  <div class="panel-field">
+    <label>Tag to remove</label>
+    <select @bind="SourceTagValue">
+      <option value="">Select a tag</option>
+      @foreach (var tag in AllTags) {
+        <option value="@tag.Id.ToString()">@tag.Name</option>
+      }
+    </select>
+  </div>
+
+  <div class="panel-field">
+    <label>Tag to keep (replacement)</label>
+    <select @bind="TargetTagValue">
+      <option value="">Select a tag</option>
+      @foreach (var tag in AllTags) {
+        <option value="@tag.Id.ToString()">@tag.Name</option>
+      }
+    </select>
+  </div>
+
+  <button @onclick="RunMerge"
+          disabled="@(IsBusy || string.IsNullOrEmpty(SourceTagValue) || string.IsNullOrEmpty(TargetTagValue))">
+    Merge tags
+  </button>
+
+  @if (MergeResult is not null) {
+    <p>Replaced on @MergeResult audio(s).</p>
+  }
+</section>
 
 @code {
   [Inject] private ITagService TagService { get; set; } = default!;
   [Inject] private ICachingService Caching { get; set; } = default!;
 
-  private bool IsCleaning { get; set; }
-  private int? Result { get; set; }
+  private List<Tag> AllTags { get; set; } = [];
+  private string? SourceTagValue { get; set; }
+  private string? TargetTagValue { get; set; }
+
+  private bool IsBusy { get; set; }
+  private int? CleanupResult { get; set; }
+  private int? MergeResult { get; set; }
   private string? Error { get; set; }
 
+  protected override async Task OnInitializedAsync() {
+    await LoadTags();
+  }
+
+  private async Task LoadTags() {
+    AllTags = await TagService.GetTags();
+  }
+
   private async Task RunCleanup() {
-    IsCleaning = true;
-    Result = null;
+    IsBusy = true;
+    CleanupResult = null;
     Error = null;
     try {
-      Result = await TagService.CleanupOrphanTags();
+      CleanupResult = await TagService.CleanupOrphanTags();
       await Caching.DeleteGroupAsync("tag");
+      await LoadTags();
     } catch (Exception e) {
       Error = e.Message;
     } finally {
-      IsCleaning = false;
+      IsBusy = false;
+    }
+  }
+
+  private async Task RunMerge() {
+    if (!Guid.TryParse(SourceTagValue, out var sourceId) ||
+        !Guid.TryParse(TargetTagValue, out var targetId)) {
+      return;
+    }
+
+    IsBusy = true;
+    MergeResult = null;
+    Error = null;
+    try {
+      MergeResult = await TagService.MergeTags(sourceId, targetId);
+      await Caching.DeleteGroupAsync("tag");
+      await Caching.DeleteGroupAsync("audio");
+      SourceTagValue = null;
+      TargetTagValue = null;
+      await LoadTags();
+    } catch (Exception e) {
+      Error = e.Message;
+    } finally {
+      IsBusy = false;
     }
   }
 }

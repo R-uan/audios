@@ -58,3 +58,11 @@ body {
 .panel-error {
   color: #ff6b6b;
 }
+
+.panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  max-width: 20rem;
+}
