@@ -1,0 +1,43 @@
+@page "/panel/audios"
+
+<PageTitle>Audios</PageTitle>
+
+<h1>Audios</h1>
+
+@if (Error is not null) {
+  <p class="panel-error">@Error</p>
+}
+
+<section class="panel-section">
+  <h2>Sanitize titles</h2>
+  <p>Removes title parts that contain unwanted symbols (brackets, non-latin characters, etc.), keeping only clean words.</p>
+  <button @onclick="RunSanitize" disabled="@IsBusy">Sanitize all titles</button>
+
+  @if (SanitizeResult is not null) {
+    <p>Sanitized @SanitizeResult audio(s) that had unwanted symbols.</p>
+  }
+</section>
+
+@code {
+  [Inject] private IAudioService AudioService { get; set; } = default!;
+  [Inject] private ICachingService Caching { get; set; } = default!;
+
+  private bool IsBusy { get; set; }
+  private int? SanitizeResult { get; set; }
+  private string? Error { get; set; }
+
+  private async Task RunSanitize() {
+    IsBusy = true;
+    SanitizeResult = null;
+    Error = null;
+    try {
+      SanitizeResult = await AudioService.SanitizeTitles();
+      await Caching.DeleteGroupAsync("audio");
+      await Caching.DeleteGroupAsync("artist");
+    } catch (Exception e) {
+      Error = e.Message;
+    } finally {
+      IsBusy = false;
+    }
+  }
+}

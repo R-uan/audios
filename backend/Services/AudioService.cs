@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text.RegularExpressions;
 using AudioArchive.Database;
 using AudioArchive.Database.Entity;
 using AudioArchive.Models;
@@ -157,6 +158,36 @@ namespace AudioArchive.Services
         query = query.Where(a => a.Metadata.Duration <= parameters.MaxDuration);
 
       return await query.ToListAsync();
+    }
+
+    private static readonly Regex NonAlphanumeric = new("[^a-zA-Z0-9]", RegexOptions.Compiled);
+
+    public async Task<int> SanitizeTitles() {
+      var audios = await database.Audios.ToListAsync();
+      var modified = 0;
+
+      foreach (var audio in audios) {
+        var sanitized = SanitizeTitle(audio.Title);
+        if (sanitized.Length == 0 || sanitized == audio.Title) continue;
+
+        audio.Title = sanitized;
+        audio.UpdatedAt = DateTime.UtcNow;
+        modified++;
+      }
+
+      if (modified > 0)
+        await database.SaveChangesAsync();
+
+      return modified;
+    }
+
+    private static string SanitizeTitle(string title) {
+      var kept = title
+        .Split(" ", StringSplitOptions.RemoveEmptyEntries)
+        .Select(slice => slice.Trim('"', ','))
+        .Where(trimmed => trimmed.Length > 0 && !NonAlphanumeric.IsMatch(trimmed));
+
+      return string.Join(" ", kept);
     }
   }
 }
