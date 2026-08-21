@@ -160,7 +160,7 @@ namespace AudioArchive.Services
       return await query.ToListAsync();
     }
 
-    private static readonly Regex NonAlphanumeric = new("[^a-zA-Z0-9]", RegexOptions.Compiled);
+    private static readonly Regex NonAlphanumeric = new("[^a-zA-Z0-9()]", RegexOptions.Compiled);
 
     public async Task<int> SanitizeTitles() {
       var audios = await database.Audios.ToListAsync();
